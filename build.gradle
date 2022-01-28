@@ -1,15 +1,13 @@
 import org.opensearch.gradle.test.RestIntegTestTask
 
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'opensearch.opensearchplugin'
-apply plugin: 'opensearch.yaml-rest-test'
+apply plugin: "java"
+apply plugin: "idea"
+apply plugin: "opensearch.opensearchplugin"
+apply plugin: "opensearch.yaml-rest-test"
+apply plugin: "checkstyle"
 
-def pluginName = 'rename'
-def pluginDescription = 'Custom plugin'
-def projectPath = 'org.opensearch'
-def pathToPlugin = 'path.to.plugin'
-def pluginClassName = 'RenamePlugin'
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 tasks.register("preparePluginPathDirs") {
     mustRunAfter clean
@@ -22,18 +20,24 @@ tasks.register("preparePluginPathDirs") {
 }
 
 opensearchplugin {
-    name pluginName
-    description pluginDescription
-    classname "${projectPath}.${pathToPlugin}.${pluginClassName}"
-    licenseFile rootProject.file('LICENSE.txt')
-    noticeFile rootProject.file('NOTICE.txt')
+    name "encrypted-repository"
+    description "Provides support for snapshots client side encryption"
+    classname "org.opensearch.repository.encrypted.EncryptedRepositoryPlugin"
+    licenseFile rootProject.file("LICENSE.txt")
+    noticeFile rootProject.file("NOTICE.txt")
 }
 
-// This requires an additional Jar not published as part of build-tools
-loggerUsageCheck.enabled = false
+checkstyle {
+    toolVersion "8.44"
+    configDir rootProject.file("checkstyle/")
+}
 
-// No need to validate pom, as we do not upload to maven/sonatype
+loggerUsageCheck.enabled = false
 validateNebulaPom.enabled = false
+dependencyLicenses.enabled = false
+thirdPartyAudit.enabled = false
+licenseHeaders.enabled = true
+testingConventions.enabled = false
 
 buildscript {
     ext {
@@ -45,7 +49,6 @@ buildscript {
         maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
-        jcenter()
     }
 
     dependencies {
@@ -58,11 +61,37 @@ repositories {
     maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
     mavenCentral()
     maven { url "https://plugins.gradle.org/m2/" }
-    jcenter()
 }
 
 test {
-    include '**/*Tests.class'
+    minHeapSize = "1024m"
+    maxHeapSize = "1024m"
+
+    include "**/*Tests.class"
+    systemProperty "tests.security.manager", "false"
+    systemProperty "es.set.netty.runtime.available.processors", "false"
+}
+
+dependencies {
+    implementation "org.slf4j:slf4j-api:1.7.32"
+    if (hasProperty("crypto_provider_type")) {
+        switch (System.properties["crypto_provider_type"]) {
+            case "corretto":
+                implementation "software.amazon.cryptools:AmazonCorrettoCryptoProvider:1.6.1:linux-x86_64"
+                break;
+            case "conscrypt":
+                implementation "org.conscrypt:conscrypt-openjdk:2.5.2:linux-x86_64"
+                break;
+            default:
+                print("Use java sun crypto provider")
+        }
+    }
+}
+
+check.dependsOn jacocoTestReport
+
+forbiddenPatterns {
+    forbiddenPatterns.enabled = false;
 }
 
 task integTest(type: RestIntegTestTask) {
@@ -73,9 +102,11 @@ task integTest(type: RestIntegTestTask) {
 tasks.named("check").configure { dependsOn(integTest) }
 
 integTest {
+    minHeapSize = "1024m"
+    maxHeapSize = "1024m"
     // The --debug-jvm command-line option makes the cluster debuggable; this makes the tests debuggable
     if (System.getProperty("test.debug") != null) {
-        jvmArgs '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005'
+        jvmArgs "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
     }
 }
 
