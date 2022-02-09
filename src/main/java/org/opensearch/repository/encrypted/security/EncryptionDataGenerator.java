@@ -17,7 +17,7 @@ public interface EncryptionDataGenerator {
 
     int KEY_SIZE = 256;
 
-    int ADD_SIZE = 32;
+    int AAD_SIZE = 32;
 
     final class EncryptionData {
 
@@ -61,7 +61,7 @@ public interface EncryptionDataGenerator {
             final KeyGenerator aesKeyGenerator = KeyGenerator.getInstance("AES");
             aesKeyGenerator.init(KEY_SIZE, new SecureRandom());
             final SecureRandom random = new SecureRandom();
-            final byte[] aad = new byte[ADD_SIZE];
+            final byte[] aad = new byte[AAD_SIZE];
             random.nextBytes(aad);
             return new EncryptionDataGenerator.EncryptionData(aesKeyGenerator.generateKey(), aad);
         } catch (final NoSuchAlgorithmException e) {
