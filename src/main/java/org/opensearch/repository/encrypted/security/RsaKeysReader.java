@@ -7,6 +7,7 @@ package org.opensearch.repository.encrypted.security;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
+import org.opensearch.common.settings.SettingsException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -29,11 +30,17 @@ public class RsaKeysReader {
         Objects.requireNonNull(publicKeyBytes, "Pubic key hasn't been set");
         Objects.requireNonNull(privateKeyBytes, "Private key hasn't been set");
         try {
+            if (publicKeyBytes.length == 0) {
+                throw new SettingsException("Pubic key hasn't been set");
+            }
+            if (privateKeyBytes.length == 0) {
+                throw new SettingsException("Private key hasn't been set");
+            }
             final PublicKey publicKey = readPublicKey(publicKeyBytes);
             final PrivateKey privateKey = readPrivateKey(privateKeyBytes);
             return new KeyPair(publicKey, privateKey);
         } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new IllegalArgumentException("Couldn't generate RSA key pair", e);
+            throw new SettingsException("Couldn't generate RSA key pair", e);
         }
     }
 
@@ -45,7 +52,7 @@ public class RsaKeysReader {
             final KeyFactory kf = KeyFactory.getInstance("RSA");
             return kf.generatePublic(keySpec);
         } catch (final IOException e) {
-            throw new IllegalArgumentException("Couldn't read public key", e);
+            throw new SettingsException("Couldn't read public key", e);
         }
     }
 
@@ -57,7 +64,7 @@ public class RsaKeysReader {
             final KeyFactory kf = KeyFactory.getInstance("RSA");
             return kf.generatePrivate(keySpec);
         } catch (final IOException e) {
-            throw new IllegalArgumentException("Couldn't read private key", e);
+            throw new SettingsException("Couldn't read private key", e);
         }
     }
 
@@ -66,7 +73,7 @@ public class RsaKeysReader {
         try (PemReader pemReader = new PemReader(reader)) {
             final PemObject pemObject = pemReader.readPemObject();
             if (Objects.isNull(pemObject)) {
-                throw new IOException("Couldn't read PEM");
+                throw new SettingsException("Couldn't read PEM");
             }
             return pemObject.getContent();
         }

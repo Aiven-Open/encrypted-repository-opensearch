@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.opensearch.repository.encrypted.security;
+package org.opensearch.repository.encrypted;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,11 +11,11 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Queue;
 
-class IOUtils {
+public class IOUtils {
 
     static final int BUFFER_SIZE = 8192; // JDK default buffer size
 
-    static byte[] readAllBytes(final InputStream in) throws IOException {
+    public static byte[] readAllBytes(final InputStream in) throws IOException {
         int count;
         int totalLength = 0;
         final Queue<byte[]> buffers = new ArrayDeque<>();
@@ -48,7 +48,7 @@ class IOUtils {
         return bytes;
     }
 
-    static byte[] readNBytes(final InputStream in, final int length) throws IOException {
+    public static byte[] readNBytes(final InputStream in, final int length) throws IOException {
         final byte[] buffer = new byte[length];
         in.read(buffer);
         return buffer;

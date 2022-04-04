@@ -11,7 +11,6 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.KeyPair;
 
 public class EncryptionDataSerializer implements Encryptor, Decryptor {
@@ -28,26 +27,25 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
         this.rsaKeyPair = rsaKeyPair;
     }
 
-    public byte[] serialize(final EncryptionDataGenerator.EncryptionData encryptionData) throws IOException {
+    public byte[] serialize(final EncryptionData encryptionData) throws IOException {
         if (encryptionData.encryptionKey().getAlgorithm().equals("AES") == false) {
             throw new IllegalArgumentException("Couldn't encrypt non AES key");
         }
         return ByteBuffer.allocate(ENC_DATA_SIZE)
-                .order(ByteOrder.LITTLE_ENDIAN)
                 .put(encrypt(encryptionData.encryptionKey().getEncoded()))
                 .put(encrypt(encryptionData.aad()))
                 .putInt(VERSION)
                 .array();
     }
 
-    public EncryptionDataGenerator.EncryptionData deserialize(final byte[] metadata) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.wrap(metadata).order(ByteOrder.LITTLE_ENDIAN);
+    public EncryptionData deserialize(final byte[] metadata) throws IOException {
+        final ByteBuffer buffer = ByteBuffer.wrap(metadata);
         final byte[] encryptedKey = new byte[256];
         final byte[] aad = new byte[256];
         buffer.get(encryptedKey);
         buffer.get(aad);
-        buffer.getInt(); //skip it
-        return new EncryptionDataGenerator.EncryptionData(
+        buffer.getInt(); //skip version
+        return new EncryptionData(
                 new SecretKeySpec(decrypt(encryptedKey), "AES"),
                 decrypt(aad)
         );
