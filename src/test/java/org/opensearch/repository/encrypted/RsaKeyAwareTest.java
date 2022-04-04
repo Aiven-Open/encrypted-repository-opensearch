@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.opensearch.repository.encrypted.security;
+package org.opensearch.repository.encrypted;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
@@ -13,6 +13,7 @@ import org.opensearch.common.io.PathUtils;
 import org.opensearch.test.OpenSearchTestCase;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -25,11 +26,11 @@ import java.security.spec.X509EncodedKeySpec;
 
 public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
 
-    KeyPair rsaKeyPair;
+    protected KeyPair rsaKeyPair;
 
-    Path publicKeyPem;
+    protected Path publicKeyPem;
 
-    Path privateKeyPem;
+    protected Path privateKeyPem;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -37,7 +38,8 @@ public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
 
     @Before
     public void setupKeys() throws Exception {
-        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA", "BC");
+        final KeyPairGenerator keyPairGenerator =
+                KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
         keyPairGenerator.initialize(2048, new SecureRandom());
         rsaKeyPair = keyPairGenerator.generateKeyPair();
 
@@ -49,11 +51,17 @@ public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
         writePemFile(privateKeyPem, new PKCS8EncodedKeySpec(rsaKeyPair.getPrivate().getEncoded()));
     }
 
-    static void writePemFile(final Path path, final EncodedKeySpec encodedKeySpec) throws IOException {
+    public static void writePemFile(final Path path, final EncodedKeySpec encodedKeySpec) throws IOException {
         try (PemWriter pemWriter = new PemWriter(Files.newBufferedWriter(path))) {
             final PemObject pemObject = new PemObject("SOME KEY", encodedKeySpec.getEncoded());
             pemWriter.writeObject(pemObject);
             pemWriter.flush();
+        }
+    }
+
+    public static byte[] readPemContent(final Path path) throws IOException {
+        try (InputStream in = Files.newInputStream(path)) {
+            return IOUtils.readAllBytes(in);
         }
     }
 

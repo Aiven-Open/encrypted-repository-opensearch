@@ -5,6 +5,7 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.opensearch.repository.encrypted.IOUtils;
 import org.opensearch.test.OpenSearchTestCase;
 
 import java.io.ByteArrayInputStream;
@@ -16,7 +17,7 @@ public class CryptoIOTests extends OpenSearchTestCase {
     private static final int BUFFER_SIZE = 8_192;
 
     public void testEncryptAndDecrypt() throws IOException {
-        final EncryptionDataGenerator.EncryptionData encData = EncryptionDataGenerator.DEFAULT_GENERATOR.generate();
+        final EncryptionData encData = new EncryptionDataGenerator().generate();
 
         final CryptoIO cryptoIo = new CryptoIO(encData);
 
