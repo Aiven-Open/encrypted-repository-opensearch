@@ -6,10 +6,10 @@
 package org.opensearch.repository.encrypted.security;
 
 import org.opensearch.common.io.PathUtils;
+import org.opensearch.common.settings.SettingsException;
+import org.opensearch.repository.encrypted.RsaKeyAwareTest;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -18,17 +18,17 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class RsaKeysReaderTests extends RsaKeyAwareTest {
 
-    public void testThrowsIllegalArgumentExceptionForEmptyBytes() throws IOException {
+    public void testThrowsSettingsExceptionForEmptyBytes() throws IOException {
         Exception e = expectThrows(
-                IllegalArgumentException.class,
+                SettingsException.class,
                 () -> RsaKeysReader.readRsaKeyPair(new byte[]{}, new byte[]{})
         );
-        assertEquals("Couldn't read public key", e.getMessage());
+        assertEquals("Pubic key hasn't been set", e.getMessage());
         e = expectThrows(
-                IllegalArgumentException.class,
+                SettingsException.class,
                 () -> RsaKeysReader.readRsaKeyPair(readPemContent(publicKeyPem), new byte[]{})
         );
-        assertEquals("Couldn't read private key", e.getMessage());
+        assertEquals("Private key hasn't been set", e.getMessage());
 
     }
 
@@ -46,7 +46,7 @@ public class RsaKeysReaderTests extends RsaKeyAwareTest {
     }
 
 
-    public void testThrowsIllegalArgumentExceptionUnsupportedKey() throws Exception {
+    public void testThrowsSettingsExceptionForUnsupportedKey() throws Exception {
         final Path tmpPath = PathUtils.get(randomFrom(tmpPaths()));
         final Path dsaPublicKeyPem = tmpPath.resolve("dsa_public_key.pem");
         final Path dsaPrivateKeyPem = tmpPath.resolve("dsa_private_key.pem");
@@ -56,7 +56,7 @@ public class RsaKeysReaderTests extends RsaKeyAwareTest {
         writePemFile(dsaPrivateKeyPem, new PKCS8EncodedKeySpec(dsaKeyPair.getPrivate().getEncoded()));
 
         final Exception e = expectThrows(
-                IllegalArgumentException.class,
+                SettingsException.class,
                 () -> RsaKeysReader.readRsaKeyPair(
                         readPemContent(publicKeyPem),
                         readPemContent(dsaPrivateKeyPem))
@@ -65,12 +65,6 @@ public class RsaKeysReaderTests extends RsaKeyAwareTest {
                 "Couldn't generate RSA key pair",
                 e.getMessage()
         );
-    }
-
-    private byte[] readPemContent(final Path path) throws IOException {
-        try (InputStream in = Files.newInputStream(path)) {
-            return IOUtils.readAllBytes(in);
-        }
     }
 
 }

@@ -5,6 +5,8 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.opensearch.repository.encrypted.IOUtils;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
@@ -31,7 +33,7 @@ public class CryptoIO implements Encryptor, Decryptor {
 
     private final SecureRandom secureRandom;
 
-    public CryptoIO(final EncryptionDataGenerator.EncryptionData encryptionData) {
+    public CryptoIO(final EncryptionData encryptionData) {
         this.secretKey = encryptionData.encryptionKey();
         this.aad = encryptionData.aad();
         this.secureRandom = new SecureRandom();

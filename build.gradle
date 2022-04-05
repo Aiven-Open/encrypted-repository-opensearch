@@ -11,7 +11,6 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 ext {
     bcVersion = "1.70"
-    correttoVersion = "1.6.1"
     conscryptVersion = "2.5.2"
 }
 
@@ -47,7 +46,7 @@ testingConventions.enabled = false
 
 buildscript {
     ext {
-        opensearch_version = "1.2.4-SNAPSHOT"
+        opensearch_version = "1.3.0"
     }
 
     repositories {
@@ -79,20 +78,7 @@ test {
 }
 
 dependencies {
-    implementation "org.slf4j:slf4j-api:1.7.32"
     implementation "org.bouncycastle:bcprov-jdk15on:$bcVersion"
-    if (hasProperty("crypto_provider_type")) {
-        switch (System.properties["crypto_provider_type"]) {
-            case "corretto":
-                implementation "software.amazon.cryptools:AmazonCorrettoCryptoProvider:$correttoVersion:linux-x86_64"
-                break;
-            case "conscrypt":
-                implementation "org.conscrypt:conscrypt-openjdk:$conscryptVersion:linux-x86_64"
-                break;
-            default:
-                print("Use java sun crypto provider")
-        }
-    }
 }
 
 check.dependsOn jacocoTestReport

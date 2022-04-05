@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.opensearch.repository.encrypted.security;
+package org.opensearch.repository.encrypted;
 
+import org.opensearch.repository.encrypted.IOUtils;
 import org.opensearch.test.OpenSearchTestCase;
 
 import java.io.ByteArrayInputStream;
