@@ -16,11 +16,10 @@ public class CryptoIOTests extends OpenSearchTestCase {
 
     private static final int BUFFER_SIZE = 8_192;
 
+    private final EncryptionData encData = new EncryptionDataGenerator().generate();
+
     public void testEncryptAndDecrypt() throws IOException {
-        final EncryptionData encData = new EncryptionDataGenerator().generate();
-
         final CryptoIO cryptoIo = new CryptoIO(encData);
-
         final byte [] sequence = randomByteArrayOfLength(BUFFER_SIZE);
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
@@ -30,6 +29,16 @@ public class CryptoIOTests extends OpenSearchTestCase {
             }
         }
 
+    }
+
+    public void testEncryptedStreamSize() throws IOException {
+        final CryptoIO cryptoIo = new CryptoIO(encData);
+        final byte [] sequence = randomByteArrayOfLength(BUFFER_SIZE);
+
+        try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
+            final byte[] encrypted = IOUtils.readAllBytes(encIn);
+            assertEquals(encrypted.length, cryptoIo.encryptedStreamSize(sequence.length));
+        }
     }
 
 }
