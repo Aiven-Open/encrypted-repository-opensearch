@@ -52,7 +52,12 @@ final class EncryptedBlobContainer extends AbstractBlobContainer {
                           final InputStream inputStream,
                           final long blobSize,
                           final boolean failIfAlreadyExists) throws IOException {
-        storageBlobContainer.writeBlob(blobName, cryptoIo.encrypt(inputStream), blobSize, failIfAlreadyExists);
+        storageBlobContainer.writeBlob(
+                blobName,
+                cryptoIo.encrypt(inputStream),
+                cryptoIo.encryptedStreamSize(blobSize),
+                failIfAlreadyExists
+        );
     }
 
     @Override
@@ -60,7 +65,11 @@ final class EncryptedBlobContainer extends AbstractBlobContainer {
                                 final InputStream inputStream,
                                 final long blobSize,
                                 final boolean failIfAlreadyExists) throws IOException {
-        storageBlobContainer.writeBlobAtomic(blobName, cryptoIo.encrypt(inputStream), blobSize, failIfAlreadyExists);
+        storageBlobContainer.writeBlobAtomic(
+                blobName,
+                cryptoIo.encrypt(inputStream),
+                cryptoIo.encryptedStreamSize(blobSize), failIfAlreadyExists
+        );
     }
 
     @Override
