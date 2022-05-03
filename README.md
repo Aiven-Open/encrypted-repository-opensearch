@@ -9,6 +9,9 @@ with all official supported repository plugins:
 - [Plugin Settings](#plugin-settings)
 - [Repository Settings](#repository-settings)
 - [Installation](#installation)
+- [Build](#build)
+- [Contribute](#Contribute)
+- [Security](#security)
 - [License](#license)
 - [Copyright](#copyright)
 
@@ -116,6 +119,21 @@ with all official supported repository plugins:
           }
         }
       ```
+
+### Build
+The project in this package uses the [Gradle](https://docs.gradle.org/current/userguide/userguide.html) build system. Gradle comes with excellent documentation that should be your first stop when trying to figure out how to operate or modify the build.
+To build from the command line:
+```bash
+./gradlew clean build 
+```
+
+### Contribute
+
+See [CONTRIBUTING](CONTRIBUTING.md) for more information.
+
+### Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
 This code is licensed under the Apache 2.0 License. See [LICENSE.txt](LICENSE.txt).
