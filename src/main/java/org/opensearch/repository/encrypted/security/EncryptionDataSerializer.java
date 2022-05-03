@@ -21,6 +21,10 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private static final String CIPHER_TRANSFORMATION = "RSA/NONE/OAEPWithSHA3-512AndMGF1Padding";
 
+    private static final String SIGNATURE_ALGORITHM = "SHA512withRSA";
+
+    private static final String KEY_ALGORITHM = "AES";
+
     static final int VERSION = 1;
 
     private final KeyPair rsaKeyPair;
@@ -38,7 +42,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     }
 
     public byte[] serialize(final EncryptionData encryptionData) throws IOException {
-        if (encryptionData.encryptionKey().getAlgorithm().equals("AES") == false) {
+        if (encryptionData.encryptionKey().getAlgorithm().equals(KEY_ALGORITHM) == false) {
             throw new IllegalArgumentException("Couldn't encrypt non AES key");
         }
         final byte[] key = encryptionData.encryptionKey().getEncoded();
@@ -49,8 +53,8 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
                         .put(aad)
                         .array()
         );
-        final byte[] encryptedKey = encrypt(key);
-        final byte[] encryptedAad = encrypt(aad);
+        final byte[] encryptedKey = encrypt(key, "Couldn't encrypt " + KEY_ALGORITHM + " key");
+        final byte[] encryptedAad = encrypt(aad, "Couldn't encrypt AAD");
         return ByteBuffer.allocate(ENC_DATA_SIZE)
                 .put(encryptedKey)
                 .put(encryptedAad)
@@ -68,8 +72,8 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
         buffer.get(encryptedAad);
         buffer.get(signature);
         buffer.getInt(); //skip version
-        final byte[] decryptedKey = decrypt(encryptedKey);
-        final byte[] decryptedAdd = decrypt(encryptedAad);
+        final byte[] decryptedKey = decrypt(encryptedKey, "Couldn't decrypt " + KEY_ALGORITHM + " key");
+        final byte[] decryptedAdd = decrypt(encryptedAad, "Couldn't decrypt AAD");
         verifySignature(
                 signature,
                 ByteBuffer.allocate(decryptedKey.length + decryptedAdd.length)
@@ -77,30 +81,30 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
                         .put(decryptedAdd)
                         .array()
         );
-        return new EncryptionData(new SecretKeySpec(decryptedKey, "AES"), decryptedAdd);
+        return new EncryptionData(new SecretKeySpec(decryptedKey, KEY_ALGORITHM), decryptedAdd);
     }
 
-    private byte[] encrypt(final byte[] bytes) {
+    private byte[] encrypt(final byte[] bytes, final String errMessage) {
         try {
             final Cipher cipher = createEncryptingCipher(rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION);
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
-            throw new RuntimeException("Couldn't encrypt AES key", e);
+            throw new RuntimeException(errMessage, e);
         }
     }
 
-    private byte[] decrypt(final byte[] bytes) {
+    private byte[] decrypt(final byte[] bytes, final String errMessage) {
         try {
             final Cipher cipher = createDecryptingCipher(rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION);
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
-            throw new RuntimeException("Couldn't decrypt AES key", e);
+            throw new RuntimeException(errMessage, e);
         }
     }
 
     private byte[] sign(final byte[] bytes) {
         try {
-            final Signature signature = Signature.getInstance("SHA512withRSA");
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
             signature.initSign(rsaKeyPair.getPrivate());
             signature.update(bytes);
             return signature.sign();
@@ -111,7 +115,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private void verifySignature(final byte[] expectedSignature, final byte[] data) {
         try {
-            final Signature signature = Signature.getInstance("SHA512withRSA");
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
             signature.initVerify(rsaKeyPair.getPublic());
             signature.update(data);
             if (signature.verify(expectedSignature) == false) {
