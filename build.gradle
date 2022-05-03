@@ -39,10 +39,10 @@ checkstyle {
 
 loggerUsageCheck.enabled = false
 validateNebulaPom.enabled = false
-dependencyLicenses.enabled = false
-thirdPartyAudit.enabled = false
+dependencyLicenses.enabled = true
+thirdPartyAudit.enabled = true
 licenseHeaders.enabled = true
-testingConventions.enabled = false
+testingConventions.enabled = true
 
 buildscript {
     ext {
