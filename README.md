@@ -1,15 +1,17 @@
-# OpenSearch Encrypted Repository Plugin  
+# Encrypted Repository Plugin for OpenSearch®
 
-OpenSearch Encrypted Repository is a plugin for OpenSearch that offers 
+Encrypted Repository for OpenSearch®  is a plugin that offers 
 client-side encryption for snapshotting repositories and could be combined 
 with all official supported repository plugins: 
 `File Systsem`, `Google Cloud Storage`, `Amazon S3` and `Microsoft Azure`.
 
 - [Features](#features)
-- [Plugin Settings](#plugin-settings)
+- [Compatibility Matrix](#compatibility-matrix)
+- [Plugin Configuration](#plugin-configuration)
 - [Repository Settings](#repository-settings)
 - [Installation](#installation)
-- [Build](#build)
+- [Build from Source](#build-from-source)
+- [Testing](#testing)
 - [Contribute](#Contribute)
 - [Security](#security)
 - [License](#license)
@@ -19,7 +21,12 @@ with all official supported repository plugins:
 * Support for AES 256 bits keys
 * AES GCM with AAD encryption support
 
-## Plugin Settings
+## Compatibility Matrix
+| OpenSearch |  Plugin | Release date |
+|-----------:|--------:|-------------:|
+|      1.3.1 | 1.3.1.0 | Apr 08, 2022 |
+
+## Plugin Configuration
 * OpenSearch keystore settings
   * `encrypted.<storage_type>.<client_name>.private_key` - RSA private key
   * `encrypted.<storage_type>.<client_name>.public_key` - RSA public key,
@@ -29,10 +36,11 @@ with all official supported repository plugins:
   * `encrypted.security_provider` - fully qualified class name for the third party security provider, e.g. `com.amazon.corretto.crypto.provider.AmazonCorrettoCryptoProvider`
 
 ## Repository Settings
-* `storage_type` - delegated repository type, suppored vaues are: `azure`, `fs`, `gcs` and `s3`
+* `storage_type` - delegated repository type, supported values are: `azure`, `fs`, `gcs` and `s3`
 * `chunk_size` - chunk size as a value and unit, for example: `1MB`, `1GB`, `1TB`. 
                  Default value is: `1GB`, min value - `500MB`, max value - `64GB`
 * `client` - the name of a client for `Azure`, `FS`, `GCS` and `S3` repository to use
+* `compress` - compress snapshot metadata, default is `true`
 
 ## Installation
 * Download the latest release from [releases](https://github.com/aiven/encrypted-repository/releases/latest)
@@ -120,19 +128,23 @@ with all official supported repository plugins:
         }
       ```
 
-### Build
+### Build from Source
 The project in this package uses the [Gradle](https://docs.gradle.org/current/userguide/userguide.html) build system. Gradle comes with excellent documentation that should be your first stop when trying to figure out how to operate or modify the build.
-To build from the command line:
+To build the plugin you need at least `JDK 1.8`:
 ```bash
 ./gradlew clean build 
 ```
 
-### Contribute
+### Testing
+Complete test suite is run using:
+```bash
+./gradlew clean assemble check
+```
 
+### Contribute
 See [CONTRIBUTING](CONTRIBUTING.md) for more information.
 
 ### Security
-
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
 
 ## License
