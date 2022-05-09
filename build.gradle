@@ -26,7 +26,7 @@ tasks.register("preparePluginPathDirs") {
 
 opensearchplugin {
     name "encrypted-repository"
-    description "Provides support for snapshots client side encryption"
+    description "Provides client-side encryption for snapshotting repositories"
     classname "org.opensearch.repository.encrypted.EncryptedRepositoryPlugin"
     licenseFile rootProject.file("LICENSE.txt")
     noticeFile rootProject.file("NOTICE.txt")
