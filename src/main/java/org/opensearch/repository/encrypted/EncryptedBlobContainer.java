@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 final class EncryptedBlobContainer extends AbstractBlobContainer {
 
@@ -89,19 +88,12 @@ final class EncryptedBlobContainer extends AbstractBlobContainer {
 
     @Override
     public Map<String, BlobMetadata> listBlobs() throws IOException {
-        return filterOutEncryptionMetadataFile(storageBlobContainer.listBlobs());
+        return storageBlobContainer.listBlobs();
     }
 
     @Override
     public Map<String, BlobMetadata> listBlobsByPrefix(final String prefix) throws IOException {
-        return filterOutEncryptionMetadataFile(storageBlobContainer.listBlobsByPrefix(prefix));
-    }
-
-    private Map<String, BlobMetadata> filterOutEncryptionMetadataFile(final Map<String, BlobMetadata> blobMetadata) {
-        return blobMetadata.entrySet()
-                .stream()
-                .filter(e -> e.getKey().endsWith(EncryptedRepository.METADATA_FILE_NAME))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return storageBlobContainer.listBlobsByPrefix(prefix);
     }
 
 }

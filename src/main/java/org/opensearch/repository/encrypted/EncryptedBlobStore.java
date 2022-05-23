@@ -21,10 +21,9 @@ final class EncryptedBlobStore implements BlobStore {
 
     private final CryptoIO cryptoIo;
 
-    EncryptedBlobStore(final BlobPath storageBasePath,
-                       final BlobStore storageBlobStore,
+    EncryptedBlobStore(final BlobStore storageBlobStore,
                        final CryptoIO cryptoIo) {
-        this.storageBasePath = storageBasePath;
+        this.storageBasePath = BlobPath.cleanPath();
         this.storageBlobStore = storageBlobStore;
         this.cryptoIo = cryptoIo;
     }
