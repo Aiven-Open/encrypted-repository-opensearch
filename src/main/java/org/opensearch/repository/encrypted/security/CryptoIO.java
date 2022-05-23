@@ -60,7 +60,7 @@ public class CryptoIO implements Encryptor, Decryptor {
     }
 
     public long encryptedStreamSize(final long originSize) {
-        return ((originSize / GCM_TAG_LENGTH + 1) * GCM_TAG_LENGTH) + GCM_IV_LENGTH;
+        return originSize + GCM_TAG_LENGTH + GCM_IV_LENGTH;
     }
 
 }

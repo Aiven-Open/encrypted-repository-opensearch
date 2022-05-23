@@ -133,7 +133,6 @@ public class EncryptedRepository extends BlobStoreRepository {
     @Override
     protected BlobStore createBlobStore() throws Exception {
         return new EncryptedBlobStore(
-                blobStorageRepository.basePath(),
                 blobStorageRepository.blobStore(),
                 new CryptoIO(
                         encryptionDataCache.computeIfAbsent(
