@@ -6,7 +6,6 @@
 package org.opensearch.repository.encrypted.security;
 
 import org.opensearch.common.io.PathUtils;
-import org.opensearch.repository.encrypted.IOUtils;
 import org.opensearch.repository.encrypted.RsaKeyAwareTest;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public class EncryptionDataSerializerTests extends RsaKeyAwareTest implements En
         }
 
         try (InputStream in = Files.newInputStream(key)) {
-            final EncryptionData decData = metadata.deserialize(IOUtils.readAllBytes(in));
+            final EncryptionData decData = metadata.deserialize(in.readAllBytes());
             assertEquals(encData.encryptionKey(), decData.encryptionKey());
             assertArrayEquals(encData.aad(), decData.aad());
         }

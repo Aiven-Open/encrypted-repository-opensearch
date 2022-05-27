@@ -5,7 +5,6 @@
 
 package org.opensearch.repository.encrypted.security;
 
-import org.opensearch.repository.encrypted.IOUtils;
 import org.opensearch.test.OpenSearchTestCase;
 
 import java.io.ByteArrayInputStream;
@@ -23,9 +22,9 @@ public class CryptoIOTests extends OpenSearchTestCase {
         final byte [] sequence = randomByteArrayOfLength(randomInt(MAX_BYES_SIZE));
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
-            final byte[] encrypted = IOUtils.readAllBytes(encIn);
+            final byte[] encrypted = encIn.readAllBytes();
             try (InputStream decIn = cryptoIo.decrypt(new ByteArrayInputStream(encrypted))) {
-                assertArrayEquals(sequence, IOUtils.readAllBytes(decIn));
+                assertArrayEquals(sequence, decIn.readAllBytes());
             }
         }
 
@@ -36,7 +35,7 @@ public class CryptoIOTests extends OpenSearchTestCase {
         final byte [] sequence = randomByteArrayOfLength(randomInt(MAX_BYES_SIZE));
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
-            final byte[] encrypted = IOUtils.readAllBytes(encIn);
+            final byte[] encrypted = encIn.readAllBytes();
             assertEquals(encrypted.length, cryptoIo.encryptedStreamSize(sequence.length));
         }
     }

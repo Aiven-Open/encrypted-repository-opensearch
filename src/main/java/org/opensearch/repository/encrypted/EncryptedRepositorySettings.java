@@ -149,8 +149,8 @@ class EncryptedRepositorySettings {
         LOGGER.info("Load key pair for: {}", prefix);
         try (InputStream privateKeyIn = getConfigValue(keySettings.v1(), prefix, settings);
              InputStream publicKeyIn = getConfigValue(keySettings.v2(), prefix, settings)) {
-            final byte[] publicKey = IOUtils.readAllBytes(publicKeyIn);
-            final byte[] privateKey = IOUtils.readAllBytes(privateKeyIn);
+            final byte[] publicKey = publicKeyIn.readAllBytes();
+            final byte[] privateKey = privateKeyIn.readAllBytes();
             return RsaKeysReader.readRsaKeyPair(publicKey, privateKey);
         }
     }

@@ -61,7 +61,7 @@ public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
 
     public static byte[] readPemContent(final Path path) throws IOException {
         try (InputStream in = Files.newInputStream(path)) {
-            return IOUtils.readAllBytes(in);
+            return in.readAllBytes();
         }
     }
 
