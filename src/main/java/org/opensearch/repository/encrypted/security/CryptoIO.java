@@ -5,8 +5,6 @@
 
 package org.opensearch.repository.encrypted.security;
 
-import org.opensearch.repository.encrypted.IOUtils;
-
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
@@ -53,7 +51,7 @@ public class CryptoIO implements Encryptor, Decryptor {
     public InputStream decrypt(final InputStream in) throws IOException {
         final Cipher cipher = createDecryptingCipher(
                 secretKey,
-                new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, IOUtils.readNBytes(in, GCM_IV_LENGTH)),
+                new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, in.readNBytes(GCM_IV_LENGTH)),
                 CIPHER_TRANSFORMATION);
         cipher.updateAAD(aad);
         return new CipherInputStream(in, cipher);

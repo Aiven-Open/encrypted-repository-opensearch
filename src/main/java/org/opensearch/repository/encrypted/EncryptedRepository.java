@@ -160,7 +160,7 @@ public class EncryptedRepository extends BlobStoreRepository {
         if (blobContainer.blobExists(METADATA_FILE_NAME)) {
             LOGGER.info("Restore encryption data");
             try (InputStream in = blobContainer.readBlob(METADATA_FILE_NAME)) {
-                encryptionData = encryptionDataSerializer.deserialize(IOUtils.readAllBytes(in));
+                encryptionData = encryptionDataSerializer.deserialize(in.readAllBytes());
             }
         } else {
             LOGGER.info("Create encryption data");
