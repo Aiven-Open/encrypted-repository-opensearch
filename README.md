@@ -24,8 +24,9 @@ with all official supported repository plugins:
 ## Compatibility Matrix
 | OpenSearch |  Plugin | Release date |
 |-----------:|--------:|-------------:|
-|      1.3.2 | 1.3.2.0 | May 10, 2022 |
-|      1.3.1 | 1.3.1.0 | Apr 08, 2022 |
+|      2.0.0 | 2.0.0.0 | May 27, 2022 |
+|      1.3.2 | 1.3.2.1 | May 24, 2022 |
+|      1.3.1 | 1.3.1.0 | May 09, 2022 |
 
 ## Plugin Configuration
 * OpenSearch keystore settings
@@ -131,7 +132,7 @@ with all official supported repository plugins:
 
 ### Build from Source
 The project in this package uses the [Gradle](https://docs.gradle.org/current/userguide/userguide.html) build system. Gradle comes with excellent documentation that should be your first stop when trying to figure out how to operate or modify the build.
-To build the plugin you need at least `JDK 1.8`:
+To build the plugin you need at least `JDK 11`:
 ```bash
 ./gradlew clean build 
 ```
