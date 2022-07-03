@@ -5,10 +5,13 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.opensearch.common.unit.ByteSizeUnit;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +19,8 @@ import java.io.SequenceInputStream;
 import java.security.SecureRandom;
 
 public class CryptoIO implements Encryptor, Decryptor {
+
+    public static final int BUFFER_SIZE = 128 * 1024; // 128KB default mark/reset buffer size
 
     public static final int GCM_TAG_LENGTH = 16;
 
@@ -45,7 +50,12 @@ public class CryptoIO implements Encryptor, Decryptor {
                 new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, iv),
                 CIPHER_TRANSFORMATION);
         cipher.updateAAD(aad);
-        return new SequenceInputStream(new ByteArrayInputStream(iv), new CipherInputStream(in, cipher));
+        return new BufferedInputStream(
+                new SequenceInputStream(
+                        new ByteArrayInputStream(iv),
+                        new CipherInputStream(in, cipher)
+                ), BUFFER_SIZE
+        );
     }
 
     public InputStream decrypt(final InputStream in) throws IOException {
@@ -54,7 +64,7 @@ public class CryptoIO implements Encryptor, Decryptor {
                 new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, in.readNBytes(GCM_IV_LENGTH)),
                 CIPHER_TRANSFORMATION);
         cipher.updateAAD(aad);
-        return new CipherInputStream(in, cipher);
+        return new BufferedInputStream(new CipherInputStream(in, cipher), BUFFER_SIZE);
     }
 
     public long encryptedStreamSize(final long originSize) {
