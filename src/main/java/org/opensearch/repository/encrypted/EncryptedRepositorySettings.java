@@ -157,7 +157,7 @@ class EncryptedRepositorySettings {
 
     private static String resolveEncryptionProviderName(final Settings settings) {
         String encryptionProviderName = BouncyCastleProvider.PROVIDER_NAME;
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) != null) {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
         if (SECURITY_PROVIDER.exists(settings)) {
@@ -165,7 +165,7 @@ class EncryptedRepositorySettings {
             try {
                 final Class<?> providerClass = Class.forName(securityProviderClass);
                 final Provider provider = (Provider) providerClass.getConstructor().newInstance();
-                if (Security.getProvider(provider.getName()) != null) {
+                if (Security.getProvider(provider.getName()) == null) {
                     LOGGER.info("Add {}", securityProviderClass);
                     Security.addProvider(provider);
                 }
