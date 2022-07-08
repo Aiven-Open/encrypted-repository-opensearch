@@ -5,11 +5,14 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.BeforeClass;
 import org.opensearch.test.OpenSearchTestCase;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Security;
 
 public class CryptoIOTests extends OpenSearchTestCase {
 
@@ -17,8 +20,13 @@ public class CryptoIOTests extends OpenSearchTestCase {
 
     private final EncryptionData encData = new EncryptionDataGenerator().generate();
 
+    @BeforeClass
+    static void setupProvider() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+
     public void testEncryptAndDecrypt() throws IOException {
-        final CryptoIO cryptoIo = new CryptoIO(encData);
+        final CryptoIO cryptoIo = new CryptoIO(BouncyCastleProvider.PROVIDER_NAME, encData);
         final byte [] sequence = randomByteArrayOfLength(randomInt(MAX_BYES_SIZE));
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
@@ -31,7 +39,7 @@ public class CryptoIOTests extends OpenSearchTestCase {
     }
 
     public void testEncryptedStreamSize() throws IOException {
-        final CryptoIO cryptoIo = new CryptoIO(encData);
+        final CryptoIO cryptoIo = new CryptoIO(BouncyCastleProvider.PROVIDER_NAME, encData);
         final byte [] sequence = randomByteArrayOfLength(randomInt(MAX_BYES_SIZE));
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
