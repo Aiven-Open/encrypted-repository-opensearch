@@ -165,7 +165,7 @@ class EncryptedRepositorySettings {
             try {
                 final Class<?> providerClass = Class.forName(securityProviderClass);
                 final Provider provider = (Provider) providerClass.getConstructor().newInstance();
-                if (Security.getProvider(provider.getName()) != null) {
+                if (Security.getProvider(provider.getName()) == null) {
                     LOGGER.info("Add {}", securityProviderClass);
                     Security.addProvider(provider);
                 }
