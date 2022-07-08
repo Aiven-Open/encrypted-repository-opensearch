@@ -134,7 +134,7 @@ public class EncryptedRepository extends BlobStoreRepository {
     protected BlobStore createBlobStore() throws Exception {
         return new EncryptedBlobStore(
                 blobStorageRepository.blobStore(),
-                new CryptoIO(
+                new CryptoIO(encryptedRepositorySettings.encryptionProviderName(),
                         encryptionDataCache.computeIfAbsent(
                                 settingsKey(metadata.settings()),
                                 this::createOrRestoreEncryptionData)
@@ -156,7 +156,10 @@ public class EncryptedRepository extends BlobStoreRepository {
         final BlobContainer blobContainer = blobStore.blobContainer(basePath());
         final EncryptionData encryptionData;
         final EncryptionDataSerializer encryptionDataSerializer =
-                new EncryptionDataSerializer(encryptedRepositorySettings.rsaKeyPair(clientName));
+                new EncryptionDataSerializer(
+                        encryptedRepositorySettings.encryptionProviderName(),
+                        encryptedRepositorySettings.rsaKeyPair(clientName)
+                );
         if (blobContainer.blobExists(METADATA_FILE_NAME)) {
             LOGGER.info("Restore encryption data");
             try (InputStream in = blobContainer.readBlob(METADATA_FILE_NAME)) {
@@ -171,7 +174,8 @@ public class EncryptedRepository extends BlobStoreRepository {
                 );
             }
             encryptionData = encryptionDataGenerator.generate();
-            final byte[] bytes = encryptionDataSerializer.serialize(encryptionData);
+            final byte[] bytes =
+                    encryptionDataSerializer.serialize(encryptionData);
             try (InputStream in = new BytesArray(bytes).streamInput()) {
                 blobContainer.writeBlobAtomic(METADATA_FILE_NAME, in, bytes.length, true);
             }

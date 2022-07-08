@@ -7,7 +7,6 @@ package org.opensearch.repository.encrypted;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.cluster.metadata.RepositoryMetadata;
 import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.settings.Setting;
@@ -23,9 +22,6 @@ import org.opensearch.repositories.blobstore.BlobStoreRepository;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.lang.reflect.InvocationTargetException;
-import java.security.Provider;
-import java.security.Security;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +29,6 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static org.opensearch.repository.encrypted.EncryptedRepositorySettings.REPOSITORY_SETTINGS;
-import static org.opensearch.repository.encrypted.EncryptedRepositorySettings.SECURITY_PROVIDER;
 import static org.opensearch.repository.encrypted.EncryptedRepositorySettings.SUPPORTED_STORAGE_TYPES;
 
 public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugin {
@@ -51,22 +46,7 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
 
     private static EncryptedRepositorySettings loadSettings(final Settings settings) {
         try {
-            return Permissions.doPrivileged(() -> {
-                Security.insertProviderAt(new BouncyCastleProvider(), 1);
-                if (SECURITY_PROVIDER.exists(settings)) {
-                    final String securityProviderClass = SECURITY_PROVIDER.get(settings);
-                    LOGGER.info("Found {}", securityProviderClass);
-                    try {
-                        final Class<?> providerClass = Class.forName(securityProviderClass);
-                        final Provider provider = (Provider) providerClass.getConstructor().newInstance();
-                        Security.insertProviderAt(provider, 1); // reorder providers
-                    } catch (ClassNotFoundException | NoSuchMethodException
-                            | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        throw new SettingsException("Unknown class " + securityProviderClass, e);
-                    }
-                }
-                return EncryptedRepositorySettings.load(settings);
-            });
+            return Permissions.doPrivileged(() -> EncryptedRepositorySettings.load(settings));
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -9,6 +9,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.opensearch.common.io.PathUtils;
 import org.opensearch.test.OpenSearchTestCase;
 
@@ -32,7 +33,8 @@ public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
 
     protected Path privateKeyPem;
 
-    static {
+    @BeforeClass
+    static void setupProvider() {
         Security.addProvider(new BouncyCastleProvider());
     }
 

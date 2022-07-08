@@ -7,6 +7,7 @@ package org.opensearch.repository.encrypted;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.common.collect.Tuple;
 import org.opensearch.common.settings.SecureSetting;
 import org.opensearch.common.settings.Setting;
@@ -17,7 +18,10 @@ import org.opensearch.repository.encrypted.security.RsaKeysReader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.security.KeyPair;
+import java.security.Provider;
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -115,8 +119,15 @@ class EncryptedRepositorySettings {
 
     private final Map<String, KeyPair> rsaKeyPairs;
 
-    EncryptedRepositorySettings(final Map<String, KeyPair> rsaKeyPairs) {
+    private final String encryptionProviderName;
+
+    EncryptedRepositorySettings(final String encryptionProviderName, final Map<String, KeyPair> rsaKeyPairs) {
+        this.encryptionProviderName = encryptionProviderName;
         this.rsaKeyPairs = rsaKeyPairs;
+    }
+
+    public String encryptionProviderName() {
+        return encryptionProviderName;
     }
 
     public KeyPair rsaKeyPair(final String clientName) {
@@ -140,7 +151,31 @@ class EncryptedRepositorySettings {
                 repoSettings.put(repoSettingsKey, createKeyPair(client, prefix.getValue(), settings));
             }
         }
-        return new EncryptedRepositorySettings(Collections.unmodifiableMap(repoSettings));
+        final String encryptionProviderName = resolveEncryptionProviderName(settings);
+        return new EncryptedRepositorySettings(encryptionProviderName, Collections.unmodifiableMap(repoSettings));
+    }
+
+    private static String resolveEncryptionProviderName(final Settings settings) {
+        String encryptionProviderName = BouncyCastleProvider.PROVIDER_NAME;
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+        if (SECURITY_PROVIDER.exists(settings)) {
+            final String securityProviderClass = SECURITY_PROVIDER.get(settings);
+            try {
+                final Class<?> providerClass = Class.forName(securityProviderClass);
+                final Provider provider = (Provider) providerClass.getConstructor().newInstance();
+                if (Security.getProvider(provider.getName()) != null) {
+                    LOGGER.info("Add {}", securityProviderClass);
+                    Security.addProvider(provider);
+                }
+                encryptionProviderName = provider.getName();
+            } catch (ClassNotFoundException | NoSuchMethodException
+                     | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                throw new SettingsException("Couldn't create security provider " + securityProviderClass, e);
+            }
+        }
+        return encryptionProviderName;
     }
 
     private static KeyPair createKeyPair(final String prefix,

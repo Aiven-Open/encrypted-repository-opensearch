@@ -11,6 +11,7 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +19,8 @@ import java.io.SequenceInputStream;
 import java.security.SecureRandom;
 
 public class CryptoIO implements Encryptor, Decryptor {
+
+    public static final int BUFFER_SIZE = 128 * 1024; // 128KB default mark/reset buffer size
 
     public static final int GCM_TAG_LENGTH = 16;
 
@@ -33,7 +36,10 @@ public class CryptoIO implements Encryptor, Decryptor {
 
     private final SecureRandom secureRandom;
 
-    public CryptoIO(final EncryptionData encryptionData) {
+    private final String encryptionProviderName;
+
+    public CryptoIO(final String encryptionProviderName, final EncryptionData encryptionData) {
+        this.encryptionProviderName = encryptionProviderName;
         this.secretKey = encryptionData.encryptionKey();
         this.aad = encryptionData.aad();
         this.secureRandom = new SecureRandom();
@@ -43,20 +49,27 @@ public class CryptoIO implements Encryptor, Decryptor {
         final byte[] iv = new byte[GCM_IV_LENGTH];
         secureRandom.nextBytes(iv);
         final Cipher cipher = createEncryptingCipher(
+                encryptionProviderName,
                 secretKey,
                 new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, iv),
                 CIPHER_TRANSFORMATION);
         cipher.updateAAD(aad);
-        return new SequenceInputStream(new ByteArrayInputStream(iv), new CipherInputStream(in, cipher));
+        return new BufferedInputStream(
+                new SequenceInputStream(
+                        new ByteArrayInputStream(iv),
+                        new CipherInputStream(in, cipher)
+                ), BUFFER_SIZE
+        );
     }
 
     public InputStream decrypt(final InputStream in) throws IOException {
         final Cipher cipher = createDecryptingCipher(
+                encryptionProviderName,
                 secretKey,
                 new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, IOUtils.readNBytes(in, GCM_IV_LENGTH)),
                 CIPHER_TRANSFORMATION);
         cipher.updateAAD(aad);
-        return new CipherInputStream(in, cipher);
+        return new BufferedInputStream(new CipherInputStream(in, cipher), BUFFER_SIZE);
     }
 
     public long encryptedStreamSize(final long originSize) {

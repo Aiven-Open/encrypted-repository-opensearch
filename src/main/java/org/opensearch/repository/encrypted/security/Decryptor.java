@@ -11,24 +11,27 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.Objects;
 
 public interface Decryptor {
 
-    default Cipher createDecryptingCipher(final Key key,
+    default Cipher createDecryptingCipher(final String encryptionProviderName,
+                                          final Key key,
                                           final String transformation) {
-        return createDecryptingCipher(key, null, transformation);
+        return createDecryptingCipher(encryptionProviderName, key, null, transformation);
     }
 
-    default Cipher createDecryptingCipher(final Key key,
+    default Cipher createDecryptingCipher(final String encryptionProviderName,
+                                          final Key key,
                                           final AlgorithmParameterSpec params,
                                           final String transformation) {
         Objects.requireNonNull(key, "key hasn't been set");
         Objects.requireNonNull(transformation, "transformation hasn't been set");
         try {
-            final Cipher cipher = Cipher.getInstance(transformation);
+            final Cipher cipher = Cipher.getInstance(transformation, encryptionProviderName);
             if (Objects.nonNull(params)) {
                 cipher.init(
                         Cipher.DECRYPT_MODE,
@@ -42,8 +45,8 @@ public interface Decryptor {
                         new SecureRandom());
             }
             return cipher;
-        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | InvalidAlgorithmParameterException e) {
+        } catch (final NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
+                       InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException("Couldn't create decrypt cipher", e);
         }
     }
