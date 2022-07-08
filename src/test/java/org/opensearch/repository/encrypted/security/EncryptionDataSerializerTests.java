@@ -5,6 +5,7 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.common.io.PathUtils;
 import org.opensearch.repository.encrypted.RsaKeyAwareTest;
 
@@ -19,7 +20,7 @@ public class EncryptionDataSerializerTests extends RsaKeyAwareTest implements En
     static final EncryptionDataGenerator encryptionDataGenerator = new EncryptionDataGenerator();
 
     public void testSerializeAndDeserializeEncryptionData() throws IOException {
-        final EncryptionDataSerializer metadata = new EncryptionDataSerializer(rsaKeyPair);
+        final EncryptionDataSerializer metadata = new EncryptionDataSerializer(BouncyCastleProvider.PROVIDER_NAME, rsaKeyPair);
         final EncryptionData encData = encryptionDataGenerator.generate();
 
         final byte[] encBytes = metadata.serialize(encData);

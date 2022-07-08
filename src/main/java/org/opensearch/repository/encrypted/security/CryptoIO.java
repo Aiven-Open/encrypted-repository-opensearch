@@ -5,8 +5,6 @@
 
 package org.opensearch.repository.encrypted.security;
 
-import org.opensearch.common.unit.ByteSizeUnit;
-
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
@@ -36,7 +34,10 @@ public class CryptoIO implements Encryptor, Decryptor {
 
     private final SecureRandom secureRandom;
 
-    public CryptoIO(final EncryptionData encryptionData) {
+    private final String encryptionProviderName;
+
+    public CryptoIO(final String encryptionProviderName, final EncryptionData encryptionData) {
+        this.encryptionProviderName = encryptionProviderName;
         this.secretKey = encryptionData.encryptionKey();
         this.aad = encryptionData.aad();
         this.secureRandom = new SecureRandom();
@@ -46,6 +47,7 @@ public class CryptoIO implements Encryptor, Decryptor {
         final byte[] iv = new byte[GCM_IV_LENGTH];
         secureRandom.nextBytes(iv);
         final Cipher cipher = createEncryptingCipher(
+                encryptionProviderName,
                 secretKey,
                 new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, iv),
                 CIPHER_TRANSFORMATION);
@@ -60,6 +62,7 @@ public class CryptoIO implements Encryptor, Decryptor {
 
     public InputStream decrypt(final InputStream in) throws IOException {
         final Cipher cipher = createDecryptingCipher(
+                encryptionProviderName,
                 secretKey,
                 new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, in.readNBytes(GCM_IV_LENGTH)),
                 CIPHER_TRANSFORMATION);

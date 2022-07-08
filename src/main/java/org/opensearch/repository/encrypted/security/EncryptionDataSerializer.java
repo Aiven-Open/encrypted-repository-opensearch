@@ -5,6 +5,8 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -14,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Signature;
 import java.security.SignatureException;
 
@@ -37,7 +40,10 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     public static final int ENC_DATA_SIZE = ENCRYPTED_KEY_SIZE + ENCRYPTED_AAD_SIZE + SIGNATURE_SIZE + Integer.BYTES;
 
-    public EncryptionDataSerializer(final KeyPair rsaKeyPair) {
+    private final String encryptionProviderName;
+
+    public EncryptionDataSerializer(final String encryptionProviderName, final KeyPair rsaKeyPair) {
+        this.encryptionProviderName = encryptionProviderName;
         this.rsaKeyPair = rsaKeyPair;
     }
 
@@ -86,7 +92,11 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private byte[] encrypt(final byte[] bytes, final String errMessage) {
         try {
-            final Cipher cipher = createEncryptingCipher(rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION);
+            final Cipher cipher =
+                    createEncryptingCipher(
+                            BouncyCastleProvider.PROVIDER_NAME,
+                            rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION
+                    );
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(errMessage, e);
@@ -95,7 +105,11 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private byte[] decrypt(final byte[] bytes, final String errMessage) {
         try {
-            final Cipher cipher = createDecryptingCipher(rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION);
+            final Cipher cipher =
+                    createDecryptingCipher(
+                            BouncyCastleProvider.PROVIDER_NAME,
+                            rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION
+                    );
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(errMessage, e);
@@ -104,24 +118,24 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private byte[] sign(final byte[] bytes) {
         try {
-            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, encryptionProviderName);
             signature.initSign(rsaKeyPair.getPrivate());
             signature.update(bytes);
             return signature.sign();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void verifySignature(final byte[] expectedSignature, final byte[] data) {
         try {
-            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, encryptionProviderName);
             signature.initVerify(rsaKeyPair.getPublic());
             signature.update(data);
             if (signature.verify(expectedSignature) == false) {
                 throw new RuntimeException("Couldn't verify signature for encryption data");
             }
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
+        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
     }
