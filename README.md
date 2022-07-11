@@ -24,11 +24,8 @@ with all official supported repository plugins:
 ## Compatibility Matrix
 | OpenSearch |  Plugin | Release date |
 |-----------:|--------:|-------------:|
-|      2.0.1 | 2.0.1.0 | Jun 30, 2022 |
-|      2.0.0 | 2.0.0.0 | May 27, 2022 |
-|      1.3.3 | 1.3.3.0 | Jul 02, 2022 |
-|      1.3.2 | 1.3.2.1 | May 24, 2022 |
-|      1.3.1 | 1.3.1.0 | May 09, 2022 |
+|      2.0.1 | 2.0.1.1 | Jul 11, 2022 |
+|      1.3.3 | 1.3.3.1 | Jul 11, 2022 |
 
 ## Plugin Configuration
 * OpenSearch keystore settings
@@ -37,8 +34,11 @@ with all official supported repository plugins:
     
   where `storage_type` is one of `azure`, `fs`, `gcs` and `s3` and `client` the name of the client delegated repository to be used   
 * OpenSearch settings:
-  * `encrypted.security_provider` - fully qualified class name for the third party security provider, e.g. `com.amazon.corretto.crypto.provider.AmazonCorrettoCryptoProvider`
-
+  * ~~`encrypted.security_provider` - fully qualified class name for the third party security provider, e.g. `com.amazon.corretto.crypto.provider.AmazonCorrettoCryptoProvider`~~
+   
+  Important Note: This settings is deprecated since this feature does not work properly and could lead to performance degradation, the setting is ignored in favour of using BouncyCastle security provider instead. 
+  It will be removed in in version 2.1.x
+  
 ## Repository Settings
 * `storage_type` - delegated repository type, supported values are: `azure`, `fs`, `gcs` and `s3`
 * `chunk_size` - chunk size as a value and unit, for example: `1MB`, `1GB`, `1TB`. 
