@@ -7,6 +7,7 @@ package org.opensearch.repository.encrypted;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.cluster.metadata.RepositoryMetadata;
 import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.settings.Setting;
@@ -22,6 +23,7 @@ import org.opensearch.repositories.blobstore.BlobStoreRepository;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.security.Security;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +41,18 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
             Setting.simpleString("storage_type", Setting.Property.NodeScope);
 
     private final EncryptedRepositorySettings encryptedRepositorySettings;
+
+    static {
+        try {
+            Permissions.doPrivileged(() -> {
+                if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                    Security.addProvider(new BouncyCastleProvider());
+                }
+            });
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't register BouncyCastle security provider", e);
+        }
+    }
 
     public EncryptedRepositoryPlugin(final Settings settings) {
         this.encryptedRepositorySettings = loadSettings(settings);

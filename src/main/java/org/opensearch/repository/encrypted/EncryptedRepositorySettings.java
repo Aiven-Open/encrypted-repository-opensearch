@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.common.collect.Tuple;
+import org.opensearch.common.logging.DeprecationLogger;
 import org.opensearch.common.settings.SecureSetting;
 import org.opensearch.common.settings.Setting;
 import org.opensearch.common.settings.Settings;
@@ -34,6 +35,8 @@ class EncryptedRepositorySettings {
 
     private static final Logger LOGGER = LogManager.getLogger(EncryptedRepositorySettings.class);
 
+    private static final DeprecationLogger DEPRECATION_LOGGER = DeprecationLogger.getLogger(EncryptedRepositorySettings.class);
+
     public static final String PREFIX = "encrypted.";
 
     public static final String AZURE_PREFIX = PREFIX + "azure.";
@@ -45,7 +48,12 @@ class EncryptedRepositorySettings {
     public static final String S3_PREFIX = PREFIX + "s3.";
 
     public static final Setting<String> SECURITY_PROVIDER =
-            Setting.simpleString("encrypted.security_provider", "", Setting.Property.NodeScope);
+            Setting.simpleString(
+                    "encrypted.security_provider",
+                    BouncyCastleProvider.PROVIDER_NAME,
+                    Setting.Property.NodeScope,
+                    Setting.Property.Deprecated
+            );
 
     public static final Set<String> SUPPORTED_STORAGE_TYPES = Sets.newHashSet("fs", "azure", "gcs", "s3");
 
@@ -156,26 +164,15 @@ class EncryptedRepositorySettings {
     }
 
     private static String resolveEncryptionProviderName(final Settings settings) {
-        String encryptionProviderName = BouncyCastleProvider.PROVIDER_NAME;
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(new BouncyCastleProvider());
+        if (SECURITY_PROVIDER.get(settings).equals(BouncyCastleProvider.PROVIDER_NAME) == false) {
+            DEPRECATION_LOGGER.deprecate(
+                    SECURITY_PROVIDER.getKey(),
+                    "this feature does not work properly and could lead to performance degradation, "
+                            + "the setting is ignored in favour of using  " + BouncyCastleProvider.PROVIDER_NAME
+                            + " instead. It will be removed in in version 2.1.x"
+            );
         }
-        if (SECURITY_PROVIDER.exists(settings)) {
-            final String securityProviderClass = SECURITY_PROVIDER.get(settings);
-            try {
-                final Class<?> providerClass = Class.forName(securityProviderClass);
-                final Provider provider = (Provider) providerClass.getConstructor().newInstance();
-                if (Security.getProvider(provider.getName()) == null) {
-                    LOGGER.info("Add {}", securityProviderClass);
-                    Security.addProvider(provider);
-                }
-                encryptionProviderName = provider.getName();
-            } catch (ClassNotFoundException | NoSuchMethodException
-                     | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new SettingsException("Couldn't create security provider " + securityProviderClass, e);
-            }
-        }
-        return encryptionProviderName;
+        return BouncyCastleProvider.PROVIDER_NAME;
     }
 
     private static KeyPair createKeyPair(final String prefix,
