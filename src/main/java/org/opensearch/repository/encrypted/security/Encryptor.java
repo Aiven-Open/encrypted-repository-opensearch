@@ -5,6 +5,8 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidAlgorithmParameterException;
@@ -18,20 +20,18 @@ import java.util.Objects;
 
 public interface Encryptor {
 
-    default Cipher createEncryptingCipher(final String encryptionProviderName,
-                                          final Key key,
+    default Cipher createEncryptingCipher(final Key key,
                                           final String transformation) {
-        return createEncryptingCipher(encryptionProviderName, key, null, transformation);
+        return createEncryptingCipher(key, null, transformation);
     }
 
-    default Cipher createEncryptingCipher(final String encryptionProviderName,
-                                          final Key key,
+    default Cipher createEncryptingCipher(final Key key,
                                           final AlgorithmParameterSpec algorithmParameterSpec,
                                           final String transformation) {
         Objects.requireNonNull(key, "key hasn't been set");
         Objects.requireNonNull(transformation, "transformation hasn't been set");
         try {
-            final Cipher cipher = Cipher.getInstance(transformation, encryptionProviderName);
+            final Cipher cipher = Cipher.getInstance(transformation, BouncyCastleProvider.PROVIDER_NAME);
             if (Objects.nonNull(algorithmParameterSpec)) {
                 cipher.init(
                         Cipher.ENCRYPT_MODE,
