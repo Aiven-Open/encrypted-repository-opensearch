@@ -40,10 +40,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     public static final int ENC_DATA_SIZE = ENCRYPTED_KEY_SIZE + ENCRYPTED_AAD_SIZE + SIGNATURE_SIZE + Integer.BYTES;
 
-    private final String encryptionProviderName;
-
-    public EncryptionDataSerializer(final String encryptionProviderName, final KeyPair rsaKeyPair) {
-        this.encryptionProviderName = encryptionProviderName;
+    public EncryptionDataSerializer(final KeyPair rsaKeyPair) {
         this.rsaKeyPair = rsaKeyPair;
     }
 
@@ -93,10 +90,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     private byte[] encrypt(final byte[] bytes, final String errMessage) {
         try {
             final Cipher cipher =
-                    createEncryptingCipher(
-                            BouncyCastleProvider.PROVIDER_NAME,
-                            rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION
-                    );
+                    createEncryptingCipher(rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION);
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(errMessage, e);
@@ -106,10 +100,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     private byte[] decrypt(final byte[] bytes, final String errMessage) {
         try {
             final Cipher cipher =
-                    createDecryptingCipher(
-                            BouncyCastleProvider.PROVIDER_NAME,
-                            rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION
-                    );
+                    createDecryptingCipher(rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION);
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(errMessage, e);
@@ -118,7 +109,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private byte[] sign(final byte[] bytes) {
         try {
-            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, encryptionProviderName);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
             signature.initSign(rsaKeyPair.getPrivate());
             signature.update(bytes);
             return signature.sign();
@@ -129,7 +120,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private void verifySignature(final byte[] expectedSignature, final byte[] data) {
         try {
-            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, encryptionProviderName);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
             signature.initVerify(rsaKeyPair.getPublic());
             signature.update(data);
             if (signature.verify(expectedSignature) == false) {

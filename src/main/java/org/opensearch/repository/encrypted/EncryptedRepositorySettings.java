@@ -7,7 +7,6 @@ package org.opensearch.repository.encrypted;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.common.collect.Tuple;
 import org.opensearch.common.logging.DeprecationLogger;
 import org.opensearch.common.settings.SecureSetting;
@@ -19,10 +18,7 @@ import org.opensearch.repository.encrypted.security.RsaKeysReader;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.security.KeyPair;
-import java.security.Provider;
-import java.security.Security;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,14 +42,6 @@ class EncryptedRepositorySettings {
     public static final String GCS_PREFIX = PREFIX + "gcs.";
 
     public static final String S3_PREFIX = PREFIX + "s3.";
-
-    public static final Setting<String> SECURITY_PROVIDER =
-            Setting.simpleString(
-                    "encrypted.security_provider",
-                    BouncyCastleProvider.PROVIDER_NAME,
-                    Setting.Property.NodeScope,
-                    Setting.Property.Deprecated
-            );
 
     public static final Set<String> SUPPORTED_STORAGE_TYPES = Sets.newHashSet("fs", "azure", "gcs", "s3");
 
@@ -108,7 +96,6 @@ class EncryptedRepositorySettings {
     public static final List<Setting<?>> REPOSITORY_SETTINGS =
             Collections.unmodifiableList(
                     Arrays.asList(
-                            SECURITY_PROVIDER,
                             AZURE_PUBLIC_KEY, AZURE_PRIVATE_KEY,
                             FS_PUBLIC_KEY, FS_PRIVATE_KEY,
                             GCS_PUBLIC_KEY, GCS_PRIVATE_KEY,
@@ -127,15 +114,8 @@ class EncryptedRepositorySettings {
 
     private final Map<String, KeyPair> rsaKeyPairs;
 
-    private final String encryptionProviderName;
-
-    EncryptedRepositorySettings(final String encryptionProviderName, final Map<String, KeyPair> rsaKeyPairs) {
-        this.encryptionProviderName = encryptionProviderName;
+    EncryptedRepositorySettings(final Map<String, KeyPair> rsaKeyPairs) {
         this.rsaKeyPairs = rsaKeyPairs;
-    }
-
-    public String encryptionProviderName() {
-        return encryptionProviderName;
     }
 
     public KeyPair rsaKeyPair(final String clientName) {
@@ -159,20 +139,7 @@ class EncryptedRepositorySettings {
                 repoSettings.put(repoSettingsKey, createKeyPair(client, prefix.getValue(), settings));
             }
         }
-        final String encryptionProviderName = resolveEncryptionProviderName(settings);
-        return new EncryptedRepositorySettings(encryptionProviderName, Collections.unmodifiableMap(repoSettings));
-    }
-
-    private static String resolveEncryptionProviderName(final Settings settings) {
-        if (SECURITY_PROVIDER.get(settings).equals(BouncyCastleProvider.PROVIDER_NAME) == false) {
-            DEPRECATION_LOGGER.deprecate(
-                    SECURITY_PROVIDER.getKey(),
-                    "this feature does not work properly and could lead to performance degradation, "
-                            + "the setting is ignored in favour of using  " + BouncyCastleProvider.PROVIDER_NAME
-                            + " instead. It will be removed in in version 2.1.x"
-            );
-        }
-        return BouncyCastleProvider.PROVIDER_NAME;
+        return new EncryptedRepositorySettings(Collections.unmodifiableMap(repoSettings));
     }
 
     private static KeyPair createKeyPair(final String prefix,

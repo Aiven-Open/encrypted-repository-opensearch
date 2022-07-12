@@ -134,10 +134,11 @@ public class EncryptedRepository extends BlobStoreRepository {
     protected BlobStore createBlobStore() throws Exception {
         return new EncryptedBlobStore(
                 blobStorageRepository.blobStore(),
-                new CryptoIO(encryptedRepositorySettings.encryptionProviderName(),
+                new CryptoIO(
                         encryptionDataCache.computeIfAbsent(
                                 settingsKey(metadata.settings()),
-                                this::createOrRestoreEncryptionData)
+                                this::createOrRestoreEncryptionData
+                        )
                 )
         );
     }
@@ -157,7 +158,6 @@ public class EncryptedRepository extends BlobStoreRepository {
         final EncryptionData encryptionData;
         final EncryptionDataSerializer encryptionDataSerializer =
                 new EncryptionDataSerializer(
-                        encryptedRepositorySettings.encryptionProviderName(),
                         encryptedRepositorySettings.rsaKeyPair(clientName)
                 );
         if (blobContainer.blobExists(METADATA_FILE_NAME)) {

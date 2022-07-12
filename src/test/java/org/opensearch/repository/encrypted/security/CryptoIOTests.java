@@ -26,7 +26,7 @@ public class CryptoIOTests extends OpenSearchTestCase {
     }
 
     public void testEncryptAndDecrypt() throws IOException {
-        final CryptoIO cryptoIo = new CryptoIO(BouncyCastleProvider.PROVIDER_NAME, encData);
+        final CryptoIO cryptoIo = new CryptoIO(encData);
         final byte [] sequence = randomByteArrayOfLength(randomInt(MAX_BYES_SIZE));
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
@@ -39,7 +39,7 @@ public class CryptoIOTests extends OpenSearchTestCase {
     }
 
     public void testEncryptedStreamSize() throws IOException {
-        final CryptoIO cryptoIo = new CryptoIO(BouncyCastleProvider.PROVIDER_NAME, encData);
+        final CryptoIO cryptoIo = new CryptoIO(encData);
         final byte [] sequence = randomByteArrayOfLength(randomInt(MAX_BYES_SIZE));
 
         try (InputStream encIn = cryptoIo.encrypt(new ByteArrayInputStream(sequence))) {
