@@ -35,9 +35,6 @@ with all official supported repository plugins:
     
   where `storage_type` is one of `azure`, `fs`, `gcs` and `s3` and `client` the name of the client delegated repository to be used   
    
-  Important Note: This settings is deprecated since this feature does not work properly and could lead to performance degradation, the setting is ignored in favour of using BouncyCastle security provider instead. 
-  It will be removed in in version 2.1.x
-  
 ## Repository Settings
 * `storage_type` - delegated repository type, supported values are: `azure`, `fs`, `gcs` and `s3`
 * `chunk_size` - chunk size as a value and unit, for example: `1MB`, `1GB`, `1TB`. 
