@@ -24,6 +24,7 @@ with all official supported repository plugins:
 ## Compatibility Matrix
 | OpenSearch |  Plugin | Release date |
 |-----------:|--------:|-------------:|
+|      2.1.0 | 2.1.0.0 | Jul 19, 2022 |
 |      2.0.1 | 2.0.1.1 | Jul 11, 2022 |
 |      1.3.3 | 1.3.3.1 | Jul 11, 2022 |
 
@@ -33,8 +34,6 @@ with all official supported repository plugins:
   * `encrypted.<storage_type>.<client_name>.public_key` - RSA public key,
     
   where `storage_type` is one of `azure`, `fs`, `gcs` and `s3` and `client` the name of the client delegated repository to be used   
-* OpenSearch settings:
-  * ~~`encrypted.security_provider` - fully qualified class name for the third party security provider, e.g. `com.amazon.corretto.crypto.provider.AmazonCorrettoCryptoProvider`~~
    
   Important Note: This settings is deprecated since this feature does not work properly and could lead to performance degradation, the setting is ignored in favour of using BouncyCastle security provider instead. 
   It will be removed in in version 2.1.x
