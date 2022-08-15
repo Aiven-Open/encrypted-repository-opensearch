@@ -24,10 +24,10 @@ with all official supported repository plugins:
 ## Compatibility Matrix
 | OpenSearch |  Plugin | Release date |
 |-----------:|--------:|-------------:|
+|      2.2.0 | 2.2.0.0 | Aug 15, 2022 |
 |      2.1.0 | 2.1.0.0 | Jul 13, 2022 |
 |      2.0.1 | 2.0.1.1 | Jul 11, 2022 |
 |      1.3.4 | 1.3.4.0 | Jul 18, 2022 |
-|      1.3.3 | 1.3.3.1 | Jul 11, 2022 |
 
 ## Plugin Configuration
 * OpenSearch keystore settings
