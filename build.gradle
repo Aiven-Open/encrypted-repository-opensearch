@@ -4,6 +4,7 @@ apply plugin: "java"
 apply plugin: "idea"
 apply plugin: "opensearch.opensearchplugin"
 apply plugin: "opensearch.yaml-rest-test"
+apply plugin: 'opensearch.pluginzip'
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
@@ -35,14 +36,13 @@ testingConventions.enabled = true
 
 buildscript {
     ext {
-        opensearch_version = "2.3.0"
+        opensearch_version = "2.4.0"
         bc_version = "1.70"
     }
 
     repositories {
         mavenLocal()
-        maven { url "https://plugins.gradle.org/m2/" }
-        maven { url "https://aws.oss.sonatype.org/content/repositories/releases" }
+        maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
     }
@@ -54,7 +54,7 @@ buildscript {
 
 repositories {
     mavenLocal()
-    maven { url "https://aws.oss.sonatype.org/content/repositories/releases" }
+    maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
     mavenCentral()
     maven { url "https://plugins.gradle.org/m2/" }
 }
@@ -103,4 +103,14 @@ testClusters.integTest {
 
 run {
     useCluster testClusters.integTest
+}
+
+task updateVersion {
+    onlyIf { System.getProperty('newVersion') }
+    doLast {
+        ext.newVersion = System.getProperty('newVersion')
+        println "Setting version to ${newVersion}."
+        // String tokenization to support -SNAPSHOT
+        ant.replaceregexp(file:'build.gradle', match: '"opensearch.version", "\\d.*"', replace: '"opensearch.version", "' + newVersion.tokenize('-')[0] + '-SNAPSHOT"', flags:'g', byline:true)
+    }
 }
