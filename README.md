@@ -24,6 +24,7 @@ with all official supported repository plugins:
 ## Compatibility Matrix
 | OpenSearch |  Plugin | Release date |
 |-----------:|--------:|-------------:|
+|      2.4.0 | 2.4.0.0 | Nov 22, 2022 | 
 |      2.3.0 | 2.3.0.0 | Sep 17, 2022 | 
 |      2.2.1 | 2.2.1.0 | Sep 02, 2022 |
 |      2.2.0 | 2.2.0.0 | Aug 15, 2022 |
