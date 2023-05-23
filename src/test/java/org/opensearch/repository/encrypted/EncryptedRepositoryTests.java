@@ -11,7 +11,7 @@ import org.opensearch.cluster.service.ClusterApplierService;
 import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.cache.Cache;
 import org.opensearch.common.settings.Settings;
-import org.opensearch.common.xcontent.NamedXContentRegistry;
+import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.indices.recovery.RecoverySettings;
 import org.opensearch.repositories.blobstore.BlobStoreRepository;
 import org.opensearch.repository.encrypted.security.EncryptionData;
