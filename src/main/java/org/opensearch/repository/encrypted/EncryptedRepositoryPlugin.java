@@ -60,9 +60,7 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
 
     private static EncryptedRepositorySettings loadSettings(final Settings settings) {
         try {
-            return Permissions.doPrivileged(() -> {
-                return EncryptedRepositorySettings.load(settings);
-            });
+            return Permissions.doPrivileged(() -> EncryptedRepositorySettings.load(settings));
         } catch (final IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -101,13 +99,13 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
                 if (encryptedRepositorySettings.hasNotSettings()) {
                     throw new SettingsException("Encrypted repository security settings haven't been set");
                 }
-                if (STORAGE_TYPE_SETTING.exists(metadata.settings()) == false) {
+                if (!STORAGE_TYPE_SETTING.exists(metadata.settings())) {
                     throw new SettingsException("Setting "
                             + STORAGE_TYPE_SETTING.getKey()
                             + " hasn't been set. Supported are: " + SUPPORTED_STORAGE_TYPES);
                 }
                 final String storageType = STORAGE_TYPE_SETTING.get(metadata.settings());
-                if (SUPPORTED_STORAGE_TYPES.contains(storageType) == false) {
+                if (!SUPPORTED_STORAGE_TYPES.contains(storageType)) {
                     throw new SettingsException("Unsupported storage type "
                             + storageType + " for "
                             + STORAGE_TYPE_SETTING.getKey()
