@@ -13,7 +13,7 @@ import java.security.PrivilegedExceptionAction;
 import org.opensearch.SpecialPermission;
 import org.opensearch.common.CheckedRunnable;
 
-final class Permissions {
+public final class Permissions {
 
     public static <T> T doPrivileged(final PrivilegedExceptionAction<T> privilegedAction) throws IOException {
         SpecialPermission.check();
@@ -25,6 +25,7 @@ final class Permissions {
     }
 
     public static void doPrivileged(final CheckedRunnable<IOException> checkedRunnable) throws IOException {
+        SpecialPermission.check();
         try {
             AccessController.doPrivileged((PrivilegedExceptionAction<Void>) () -> {
                 checkedRunnable.run();

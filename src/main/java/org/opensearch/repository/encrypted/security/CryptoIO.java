@@ -5,6 +5,8 @@
 
 package org.opensearch.repository.encrypted.security;
 
+import org.opensearch.repository.encrypted.Permissions;
+
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
@@ -41,28 +43,32 @@ public class CryptoIO implements Encryptor, Decryptor {
     }
 
     public InputStream encrypt(final InputStream in) throws IOException {
-        final byte[] iv = new byte[GCM_IV_LENGTH];
-        secureRandom.nextBytes(iv);
-        final Cipher cipher = createEncryptingCipher(
-                secretKey,
-                new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, iv),
-                CIPHER_TRANSFORMATION);
-        cipher.updateAAD(aad);
-        return new BufferedInputStream(
-                new SequenceInputStream(
-                        new ByteArrayInputStream(iv),
-                        new CipherInputStream(in, cipher)
-                ), BUFFER_SIZE
-        );
+        return Permissions.doPrivileged(() -> {
+            final byte[] iv = new byte[GCM_IV_LENGTH];
+            secureRandom.nextBytes(iv);
+            final Cipher cipher = createEncryptingCipher(
+                    secretKey,
+                    new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, iv),
+                    CIPHER_TRANSFORMATION);
+            cipher.updateAAD(aad);
+            return new BufferedInputStream(
+                    new SequenceInputStream(
+                            new ByteArrayInputStream(iv),
+                            new CipherInputStream(in, cipher)
+                    ), BUFFER_SIZE
+            );
+        });
     }
 
     public InputStream decrypt(final InputStream in) throws IOException {
-        final Cipher cipher = createDecryptingCipher(
-                secretKey,
-                new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, in.readNBytes(GCM_IV_LENGTH)),
-                CIPHER_TRANSFORMATION);
-        cipher.updateAAD(aad);
-        return new BufferedInputStream(new CipherInputStream(in, cipher), BUFFER_SIZE);
+        return Permissions.doPrivileged(() -> {
+            final Cipher cipher = createDecryptingCipher(
+                    secretKey,
+                    new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, in.readNBytes(GCM_IV_LENGTH)),
+                    CIPHER_TRANSFORMATION);
+            cipher.updateAAD(aad);
+            return new BufferedInputStream(new CipherInputStream(in, cipher), BUFFER_SIZE);
+        });
     }
 
     public long encryptedStreamSize(final long originSize) {
