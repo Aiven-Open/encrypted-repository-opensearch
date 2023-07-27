@@ -6,6 +6,7 @@
 package org.opensearch.repository.encrypted.security;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.opensearch.repository.encrypted.Permissions;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -45,25 +46,27 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     }
 
     public byte[] serialize(final EncryptionData encryptionData) throws IOException {
-        if (encryptionData.encryptionKey().getAlgorithm().equals(KEY_ALGORITHM) == false) {
-            throw new IllegalArgumentException("Couldn't encrypt non AES key");
-        }
-        final byte[] key = encryptionData.encryptionKey().getEncoded();
-        final byte[] aad = encryptionData.aad();
-        final byte[] signature = sign(
-                ByteBuffer.allocate(key.length + aad.length)
-                        .put(key)
-                        .put(aad)
-                        .array()
-        );
-        final byte[] encryptedKey = encrypt(key, "Couldn't encrypt " + KEY_ALGORITHM + " key");
-        final byte[] encryptedAad = encrypt(aad, "Couldn't encrypt AAD");
-        return ByteBuffer.allocate(ENC_DATA_SIZE)
-                .put(encryptedKey)
-                .put(encryptedAad)
-                .put(signature)
-                .putInt(VERSION)
-                .array();
+        return Permissions.doPrivileged(() -> {
+            if (encryptionData.encryptionKey().getAlgorithm().equals(KEY_ALGORITHM) == false) {
+                throw new IllegalArgumentException("Couldn't encrypt non AES key");
+            }
+            final byte[] key = encryptionData.encryptionKey().getEncoded();
+            final byte[] aad = encryptionData.aad();
+            final byte[] signature = sign(
+                    ByteBuffer.allocate(key.length + aad.length)
+                            .put(key)
+                            .put(aad)
+                            .array()
+            );
+            final byte[] encryptedKey = encrypt(key, "Couldn't encrypt " + KEY_ALGORITHM + " key");
+            final byte[] encryptedAad = encrypt(aad, "Couldn't encrypt AAD");
+            return ByteBuffer.allocate(ENC_DATA_SIZE)
+                    .put(encryptedKey)
+                    .put(encryptedAad)
+                    .put(signature)
+                    .putInt(VERSION)
+                    .array();
+        });
     }
 
     public EncryptionData deserialize(final byte[] metadata) throws IOException {
