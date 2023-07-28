@@ -70,24 +70,26 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     }
 
     public EncryptionData deserialize(final byte[] metadata) throws IOException {
-        final ByteBuffer buffer = ByteBuffer.wrap(metadata);
-        final byte[] encryptedKey = new byte[256];
-        final byte[] encryptedAad = new byte[256];
-        final byte[] signature = new byte[256];
-        buffer.get(encryptedKey);
-        buffer.get(encryptedAad);
-        buffer.get(signature);
-        buffer.getInt(); //skip version
-        final byte[] decryptedKey = decrypt(encryptedKey, "Couldn't decrypt " + KEY_ALGORITHM + " key");
-        final byte[] decryptedAdd = decrypt(encryptedAad, "Couldn't decrypt AAD");
-        verifySignature(
-                signature,
-                ByteBuffer.allocate(decryptedKey.length + decryptedAdd.length)
-                        .put(decryptedKey)
-                        .put(decryptedAdd)
-                        .array()
-        );
-        return new EncryptionData(new SecretKeySpec(decryptedKey, KEY_ALGORITHM), decryptedAdd);
+        return Permissions.doPrivileged(() -> {
+            final ByteBuffer buffer = ByteBuffer.wrap(metadata);
+            final byte[] encryptedKey = new byte[256];
+            final byte[] encryptedAad = new byte[256];
+            final byte[] signature = new byte[256];
+            buffer.get(encryptedKey);
+            buffer.get(encryptedAad);
+            buffer.get(signature);
+            buffer.getInt(); //skip version
+            final byte[] decryptedKey = decrypt(encryptedKey, "Couldn't decrypt " + KEY_ALGORITHM + " key");
+            final byte[] decryptedAdd = decrypt(encryptedAad, "Couldn't decrypt AAD");
+            verifySignature(
+                    signature,
+                    ByteBuffer.allocate(decryptedKey.length + decryptedAdd.length)
+                            .put(decryptedKey)
+                            .put(decryptedAdd)
+                            .array()
+            );
+            return new EncryptionData(new SecretKeySpec(decryptedKey, KEY_ALGORITHM), decryptedAdd);
+        });
     }
 
     private byte[] encrypt(final byte[] bytes, final String errMessage) {
