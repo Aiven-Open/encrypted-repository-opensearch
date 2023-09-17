@@ -16,6 +16,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.security.Provider;
 import java.security.SecureRandom;
 
 public class CryptoIO implements Encryptor, Decryptor {
@@ -36,10 +37,13 @@ public class CryptoIO implements Encryptor, Decryptor {
 
     private final SecureRandom secureRandom;
 
-    public CryptoIO(final EncryptionData encryptionData) {
+    private final Provider securityProvider;
+
+    public CryptoIO(final EncryptionData encryptionData, final Provider securityProvider) {
         this.secretKey = encryptionData.encryptionKey();
         this.aad = encryptionData.aad();
         this.secureRandom = new SecureRandom();
+        this.securityProvider = securityProvider;
     }
 
     public InputStream encrypt(final InputStream in) throws IOException {
@@ -49,7 +53,7 @@ public class CryptoIO implements Encryptor, Decryptor {
             final Cipher cipher = createEncryptingCipher(
                     secretKey,
                     new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, iv),
-                    CIPHER_TRANSFORMATION);
+                    CIPHER_TRANSFORMATION, securityProvider);
             cipher.updateAAD(aad);
             return new BufferedInputStream(
                     new SequenceInputStream(
@@ -65,7 +69,7 @@ public class CryptoIO implements Encryptor, Decryptor {
             final Cipher cipher = createDecryptingCipher(
                     secretKey,
                     new GCMParameterSpec(GCM_ENCRYPTED_BLOCK_LENGTH, in.readNBytes(GCM_IV_LENGTH)),
-                    CIPHER_TRANSFORMATION);
+                    CIPHER_TRANSFORMATION, securityProvider);
             cipher.updateAAD(aad);
             return new BufferedInputStream(new CipherInputStream(in, cipher), BUFFER_SIZE);
         });

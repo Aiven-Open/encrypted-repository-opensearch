@@ -5,7 +5,6 @@
 
 package org.opensearch.repository.encrypted.security;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.repository.encrypted.Permissions;
 
 import javax.crypto.BadPaddingException;
@@ -17,7 +16,7 @@ import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.Provider;
 import java.security.Signature;
 import java.security.SignatureException;
 
@@ -41,13 +40,17 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     public static final int ENC_DATA_SIZE = ENCRYPTED_KEY_SIZE + ENCRYPTED_AAD_SIZE + SIGNATURE_SIZE + Integer.BYTES;
 
-    public EncryptionDataSerializer(final KeyPair rsaKeyPair) {
+    private final Provider securityProvider;
+
+    public EncryptionDataSerializer(final KeyPair rsaKeyPair, final Provider securityProvider) {
         this.rsaKeyPair = rsaKeyPair;
+        this.securityProvider = securityProvider;
+
     }
 
     public byte[] serialize(final EncryptionData encryptionData) throws IOException {
         return Permissions.doPrivileged(() -> {
-            if (encryptionData.encryptionKey().getAlgorithm().equals(KEY_ALGORITHM) == false) {
+            if (!encryptionData.encryptionKey().getAlgorithm().equals(KEY_ALGORITHM)) {
                 throw new IllegalArgumentException("Couldn't encrypt non AES key");
             }
             final byte[] key = encryptionData.encryptionKey().getEncoded();
@@ -95,7 +98,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     private byte[] encrypt(final byte[] bytes, final String errMessage) {
         try {
             final Cipher cipher =
-                    createEncryptingCipher(rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION);
+                    createEncryptingCipher(rsaKeyPair.getPublic(), CIPHER_TRANSFORMATION, securityProvider);
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(errMessage, e);
@@ -105,7 +108,7 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
     private byte[] decrypt(final byte[] bytes, final String errMessage) {
         try {
             final Cipher cipher =
-                    createDecryptingCipher(rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION);
+                    createDecryptingCipher(rsaKeyPair.getPrivate(), CIPHER_TRANSFORMATION, securityProvider);
             return cipher.doFinal(bytes);
         } catch (final IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(errMessage, e);
@@ -114,24 +117,24 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
     private byte[] sign(final byte[] bytes) {
         try {
-            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, securityProvider);
             signature.initSign(rsaKeyPair.getPrivate());
             signature.update(bytes);
             return signature.sign();
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new RuntimeException(e);
         }
     }
 
     private void verifySignature(final byte[] expectedSignature, final byte[] data) {
         try {
-            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
+            final Signature signature = Signature.getInstance(SIGNATURE_ALGORITHM, securityProvider);
             signature.initVerify(rsaKeyPair.getPublic());
             signature.update(data);
-            if (signature.verify(expectedSignature) == false) {
+            if (!signature.verify(expectedSignature)) {
                 throw new RuntimeException("Couldn't verify signature for encryption data");
             }
-        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | SignatureException | InvalidKeyException e) {
             throw new RuntimeException(e);
         }
     }

@@ -21,9 +21,8 @@ import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.Provider;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Collection;
@@ -47,10 +46,10 @@ public class EncryptedRepositoryPluginIT extends OpenSearchIntegTestCase {
         LOGGER.info("Create RSA Keys");
         Permissions.doPrivileged(() -> {
             try {
-                Security.addProvider(new BouncyCastleProvider());
+                final Provider securityProvider = new BouncyCastleProvider();
                 LOGGER.info("Create RSA Keys");
                 final KeyPairGenerator keyPairGenerator
-                        = KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
+                        = KeyPairGenerator.getInstance("RSA", securityProvider);
                 keyPairGenerator.initialize(2048, new SecureRandom());
                 final KeyPair rsaKeyPair = keyPairGenerator.generateKeyPair();
                 final Path keysPath = createTempDir("keys-").toAbsolutePath();
@@ -59,7 +58,7 @@ public class EncryptedRepositoryPluginIT extends OpenSearchIntegTestCase {
 
                 writePemFile(publicKeyPem, new X509EncodedKeySpec(rsaKeyPair.getPublic().getEncoded()));
                 writePemFile(privateKeyPem, new PKCS8EncodedKeySpec(rsaKeyPair.getPrivate().getEncoded()));
-            } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             }
         });

@@ -9,7 +9,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemWriter;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.opensearch.common.io.PathUtils;
 import org.opensearch.test.OpenSearchTestCase;
 
@@ -19,8 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.Provider;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -33,15 +32,13 @@ public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
 
     protected Path privateKeyPem;
 
-    @BeforeClass
-    static void setupProvider() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+    protected Provider securityProvider;
 
     @Before
     public void setupKeys() throws Exception {
+        securityProvider = new BouncyCastleProvider();
         final KeyPairGenerator keyPairGenerator =
-                KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
+                KeyPairGenerator.getInstance("RSA", securityProvider);
         keyPairGenerator.initialize(2048, new SecureRandom());
         rsaKeyPair = keyPairGenerator.generateKeyPair();
 

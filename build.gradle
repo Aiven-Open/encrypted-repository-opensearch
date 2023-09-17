@@ -4,10 +4,16 @@ apply plugin: "java"
 apply plugin: "idea"
 apply plugin: "opensearch.opensearchplugin"
 apply plugin: "opensearch.yaml-rest-test"
-apply plugin: 'opensearch.pluginzip'
+apply plugin: "opensearch.pluginzip"
+apply plugin: "checkstyle"
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
+
+checkstyle {
+    toolVersion "10.3.3"
+    configDirectory.set(rootProject.file("checkstyle/"))
+}
 
 tasks.register("preparePluginPathDirs") {
     mustRunAfter clean

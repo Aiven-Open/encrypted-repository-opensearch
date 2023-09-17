@@ -16,10 +16,9 @@ import java.nio.file.Path;
 
 public class EncryptionDataSerializerTests extends RsaKeyAwareTest implements Encryptor {
 
-    static final EncryptionDataGenerator encryptionDataGenerator = new EncryptionDataGenerator();
-
     public void testSerializeAndDeserializeEncryptionData() throws IOException {
-        final EncryptionDataSerializer metadata = new EncryptionDataSerializer(rsaKeyPair);
+        EncryptionDataGenerator encryptionDataGenerator = new EncryptionDataGenerator(securityProvider);
+        final EncryptionDataSerializer metadata = new EncryptionDataSerializer(rsaKeyPair, securityProvider);
         final EncryptionData encData = encryptionDataGenerator.generate();
 
         final byte[] encBytes = metadata.serialize(encData);

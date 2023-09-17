@@ -23,7 +23,7 @@ import org.opensearch.repositories.blobstore.BlobStoreRepository;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.security.Security;
+import java.security.Provider;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,20 +42,15 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
 
     private final EncryptedRepositorySettings encryptedRepositorySettings;
 
-    static {
-        try {
-            Permissions.doPrivileged(() -> {
-                if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-                    Security.addProvider(new BouncyCastleProvider());
-                }
-            });
-        } catch (IOException e) {
-            throw new RuntimeException("Couldn't register BouncyCastle security provider", e);
-        }
-    }
+    private final Provider securityProvider;
 
     public EncryptedRepositoryPlugin(final Settings settings) {
         this.encryptedRepositorySettings = loadSettings(settings);
+        try {
+            this.securityProvider = Permissions.doPrivileged(BouncyCastleProvider::new);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't register BouncyCastle security provider", e);
+        }
     }
 
     private static EncryptedRepositorySettings loadSettings(final Settings settings) {
@@ -90,7 +85,7 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
                 final BlobStoreRepository storageRepository = createStorageRepository(metadata, typeLookup);
                 return new EncryptedRepository(metadata,
                         encryptedRepositorySettings, STORAGE_TYPE_SETTING.get(metadata.settings()), storageRepository,
-                        namedXContentRegistry, clusterService, recoverySettings);
+                        namedXContentRegistry, clusterService, recoverySettings, securityProvider);
             }
 
             private BlobStoreRepository createStorageRepository(final RepositoryMetadata metadata,

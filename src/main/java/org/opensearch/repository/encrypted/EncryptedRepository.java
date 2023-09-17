@@ -31,6 +31,7 @@ import org.opensearch.repository.encrypted.security.EncryptionDataSerializer;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Provider;
 import java.util.Locale;
 
 public class EncryptedRepository extends BlobStoreRepository {
@@ -64,18 +65,21 @@ public class EncryptedRepository extends BlobStoreRepository {
 
     private final EncryptionDataGenerator encryptionDataGenerator;
 
+    private final Provider securityProvider;
+
     public EncryptedRepository(final RepositoryMetadata metadata,
                                final EncryptedRepositorySettings encryptedRepositorySettings,
                                final String blobStorageRepositoryType,
                                final BlobStoreRepository blobStorageRepository,
                                final NamedXContentRegistry namedXContentRegistry,
                                final ClusterService clusterService,
-                               final RecoverySettings recoverySettings) {
+                               final RecoverySettings recoverySettings,
+                               final Provider securityProvider) {
         this(metadata, encryptedRepositorySettings,
                 blobStorageRepositoryType, blobStorageRepository,
                 namedXContentRegistry, clusterService,
                 CacheBuilder.<String, EncryptionData>builder().build(),
-                recoverySettings);
+                recoverySettings, securityProvider);
     }
 
     public EncryptedRepository(final RepositoryMetadata metadata,
@@ -85,14 +89,16 @@ public class EncryptedRepository extends BlobStoreRepository {
                                final NamedXContentRegistry namedXContentRegistry,
                                final ClusterService clusterService,
                                final Cache<String, EncryptionData> encryptionDataCache,
-                               final RecoverySettings recoverySettings) {
+                               final RecoverySettings recoverySettings,
+                               final Provider securityProvider) {
         super(metadata, COMPRESS_SETTING.get(metadata.settings()),
                 namedXContentRegistry, clusterService, recoverySettings);
         this.encryptedRepositorySettings = encryptedRepositorySettings;
         this.blobStorageRepositoryType = blobStorageRepositoryType;
         this.blobStorageRepository = blobStorageRepository;
         this.encryptionDataCache = encryptionDataCache;
-        this.encryptionDataGenerator = new EncryptionDataGenerator();
+        this.encryptionDataGenerator = new EncryptionDataGenerator(securityProvider);
+        this.securityProvider = securityProvider;
     }
 
     @Override
@@ -138,7 +144,7 @@ public class EncryptedRepository extends BlobStoreRepository {
                         encryptionDataCache.computeIfAbsent(
                                 settingsKey(metadata.settings()),
                                 this::createOrRestoreEncryptionData
-                        )
+                        ), securityProvider
                 )
         );
     }
@@ -158,7 +164,7 @@ public class EncryptedRepository extends BlobStoreRepository {
         final EncryptionData encryptionData;
         final EncryptionDataSerializer encryptionDataSerializer =
                 new EncryptionDataSerializer(
-                        encryptedRepositorySettings.rsaKeyPair(clientName)
+                        encryptedRepositorySettings.rsaKeyPair(clientName), securityProvider
                 );
         if (blobContainer.blobExists(METADATA_FILE_NAME)) {
             LOGGER.info("Restore encryption data");

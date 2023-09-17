@@ -120,15 +120,5 @@
             <message key="descendant.token.max" value="Do not check for equality with 'true', since it is implied" />
         </module>
 
-        <!-- Forbid using '!' for logical negations in favour of checking against 'false' explicitly. -->
-        <module name="DescendantToken">
-            <property name="id" value="BooleanNegation" />
-            <property name="tokens" value="EXPR"/>
-            <property name="limitedTokens" value="LNOT"/>
-            <property name="maximumNumber" value="0"/>
-            <property name="maximumDepth" value="1"/>
-            <message key="descendant.token.max" value="Do not negate boolean expressions with '!', but check explicitly with '== false' as it is more explicit"/>
-        </module>
-
     </module>
 </module>

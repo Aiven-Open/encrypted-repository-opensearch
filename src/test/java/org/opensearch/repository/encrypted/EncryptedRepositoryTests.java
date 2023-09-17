@@ -5,6 +5,7 @@
 
 package org.opensearch.repository.encrypted;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.Before;
 import org.opensearch.cluster.metadata.RepositoryMetadata;
 import org.opensearch.cluster.service.ClusterApplierService;
@@ -53,7 +54,7 @@ public class EncryptedRepositoryTests extends OpenSearchTestCase {
                         mockedNamedXContentRegistry,
                         mockedClusterService,
                         mockedCache,
-                        mockedRecoverySettings);
+                        mockedRecoverySettings, new BouncyCastleProvider());
 
         repository.start();
         verify(mockedBlobStoreRepository).start();
