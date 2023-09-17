@@ -96,7 +96,7 @@ public class EncryptedRepositoryPluginIT extends OpenSearchIntegTestCase {
 		final RepositoryException exception = expectThrows(RepositoryException.class, () -> client().admin().cluster()
 				.preparePutRepository("enc-repo-no-storage-type").setType(EncryptedRepository.REPOSITORY_TYPE).get());
 		assertEquals("[enc-repo-no-storage-type] failed to create repository", exception.getMessage());
-		assertEquals("Setting storage_type hasn't been set. Supported are: [s3, fs, gcs, azure]",
+		assertEquals("Setting storage_type hasn't been set. Supported are: [azure, fs, gcs, s3]",
 				exception.getCause().getMessage());
 	}
 
@@ -106,7 +106,7 @@ public class EncryptedRepositoryPluginIT extends OpenSearchIntegTestCase {
 						.setType(EncryptedRepository.REPOSITORY_TYPE)
 						.setSettings(Settings.builder().put("storage_type", "aa")).get());
 		assertEquals("[enc-repo-wrong-storage-type] failed to create repository", exception.getMessage());
-		assertEquals("Unsupported storage type aa for storage_type. Supported are: [s3, fs, gcs, azure]",
+		assertEquals("Unsupported storage type aa for storage_type. Supported are: [azure, fs, gcs, s3]",
 				exception.getCause().getMessage());
 	}
 

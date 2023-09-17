@@ -5,8 +5,6 @@
 
 package org.opensearch.repository.encrypted;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.opensearch.cluster.metadata.RepositoryMetadata;
 import org.opensearch.cluster.service.ClusterService;
@@ -24,7 +22,6 @@ import org.opensearch.repositories.blobstore.BlobStoreRepository;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.security.Provider;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,8 +31,6 @@ import static org.opensearch.repository.encrypted.EncryptedRepositorySettings.RE
 import static org.opensearch.repository.encrypted.EncryptedRepositorySettings.SUPPORTED_STORAGE_TYPES;
 
 public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugin {
-
-	private static final Logger LOGGER = LogManager.getLogger(EncryptedRepositoryPlugin.class);
 
 	public static final Setting<String> STORAGE_TYPE_SETTING = Setting.simpleString("storage_type",
 			Setting.Property.NodeScope);
@@ -71,7 +66,7 @@ public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugi
 			final NamedXContentRegistry namedXContentRegistry, final ClusterService clusterService,
 			final RecoverySettings recoverySettings) {
 
-		return Collections.singletonMap(EncryptedRepository.REPOSITORY_TYPE, new Repository.Factory() {
+		return Map.of(EncryptedRepository.REPOSITORY_TYPE, new Repository.Factory() {
 			@Override
 			public Repository create(RepositoryMetadata metadata) throws Exception {
 				throw new UnsupportedOperationException("Couldn't create a single encrypted repository");
