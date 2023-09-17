@@ -27,44 +27,44 @@ import java.security.spec.X509EncodedKeySpec;
 
 public abstract class RsaKeyAwareTest extends OpenSearchTestCase {
 
-    protected KeyPair rsaKeyPair;
+	protected KeyPair rsaKeyPair;
 
-    protected Path publicKeyPem;
+	protected Path publicKeyPem;
 
-    protected Path privateKeyPem;
+	protected Path privateKeyPem;
 
-    @BeforeClass
-    static void setupProvider() {
-        Security.addProvider(new BouncyCastleProvider());
-    }
+	@BeforeClass
+	static void setupProvider() {
+		Security.addProvider(new BouncyCastleProvider());
+	}
 
-    @Before
-    public void setupKeys() throws Exception {
-        final KeyPairGenerator keyPairGenerator =
-                KeyPairGenerator.getInstance("RSA", BouncyCastleProvider.PROVIDER_NAME);
-        keyPairGenerator.initialize(2048, new SecureRandom());
-        rsaKeyPair = keyPairGenerator.generateKeyPair();
+	@Before
+	public void setupKeys() throws Exception {
+		final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA",
+				BouncyCastleProvider.PROVIDER_NAME);
+		keyPairGenerator.initialize(2048, new SecureRandom());
+		rsaKeyPair = keyPairGenerator.generateKeyPair();
 
-        final Path tmpPath = PathUtils.get(randomFrom(tmpPaths()));
-        publicKeyPem = tmpPath.resolve("test_public.pem");
-        privateKeyPem = tmpPath.resolve("test_private.pem");
+		final Path tmpPath = PathUtils.get(randomFrom(tmpPaths()));
+		publicKeyPem = tmpPath.resolve("test_public.pem");
+		privateKeyPem = tmpPath.resolve("test_private.pem");
 
-        writePemFile(publicKeyPem, new X509EncodedKeySpec(rsaKeyPair.getPublic().getEncoded()));
-        writePemFile(privateKeyPem, new PKCS8EncodedKeySpec(rsaKeyPair.getPrivate().getEncoded()));
-    }
+		writePemFile(publicKeyPem, new X509EncodedKeySpec(rsaKeyPair.getPublic().getEncoded()));
+		writePemFile(privateKeyPem, new PKCS8EncodedKeySpec(rsaKeyPair.getPrivate().getEncoded()));
+	}
 
-    public static void writePemFile(final Path path, final EncodedKeySpec encodedKeySpec) throws IOException {
-        try (PemWriter pemWriter = new PemWriter(Files.newBufferedWriter(path))) {
-            final PemObject pemObject = new PemObject("SOME KEY", encodedKeySpec.getEncoded());
-            pemWriter.writeObject(pemObject);
-            pemWriter.flush();
-        }
-    }
+	public static void writePemFile(final Path path, final EncodedKeySpec encodedKeySpec) throws IOException {
+		try (PemWriter pemWriter = new PemWriter(Files.newBufferedWriter(path))) {
+			final PemObject pemObject = new PemObject("SOME KEY", encodedKeySpec.getEncoded());
+			pemWriter.writeObject(pemObject);
+			pemWriter.flush();
+		}
+	}
 
-    public static byte[] readPemContent(final Path path) throws IOException {
-        try (InputStream in = Files.newInputStream(path)) {
-            return in.readAllBytes();
-        }
-    }
+	public static byte[] readPemContent(final Path path) throws IOException {
+		try (InputStream in = Files.newInputStream(path)) {
+			return in.readAllBytes();
+		}
+	}
 
 }

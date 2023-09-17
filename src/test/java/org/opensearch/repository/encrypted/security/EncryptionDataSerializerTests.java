@@ -16,27 +16,27 @@ import java.nio.file.Path;
 
 public class EncryptionDataSerializerTests extends RsaKeyAwareTest implements Encryptor {
 
-    static final EncryptionDataGenerator encryptionDataGenerator = new EncryptionDataGenerator();
+	static final EncryptionDataGenerator encryptionDataGenerator = new EncryptionDataGenerator();
 
-    public void testSerializeAndDeserializeEncryptionData() throws IOException {
-        final EncryptionDataSerializer metadata = new EncryptionDataSerializer(rsaKeyPair);
-        final EncryptionData encData = encryptionDataGenerator.generate();
+	public void testSerializeAndDeserializeEncryptionData() throws IOException {
+		final EncryptionDataSerializer metadata = new EncryptionDataSerializer(rsaKeyPair);
+		final EncryptionData encData = encryptionDataGenerator.generate();
 
-        final byte[] encBytes = metadata.serialize(encData);
+		final byte[] encBytes = metadata.serialize(encData);
 
-        final Path tmpPath = PathUtils.get(randomFrom(tmpPaths()));
-        final Path key = tmpPath.resolve("enc_key");
+		final Path tmpPath = PathUtils.get(randomFrom(tmpPaths()));
+		final Path key = tmpPath.resolve("enc_key");
 
-        try (OutputStream out = Files.newOutputStream(key)) {
-            out.write(encBytes);
-            out.flush();
-        }
+		try (OutputStream out = Files.newOutputStream(key)) {
+			out.write(encBytes);
+			out.flush();
+		}
 
-        try (InputStream in = Files.newInputStream(key)) {
-            final EncryptionData decData = metadata.deserialize(in.readAllBytes());
-            assertEquals(encData.encryptionKey(), decData.encryptionKey());
-            assertArrayEquals(encData.aad(), decData.aad());
-        }
-    }
+		try (InputStream in = Files.newInputStream(key)) {
+			final EncryptionData decData = metadata.deserialize(in.readAllBytes());
+			assertEquals(encData.encryptionKey(), decData.encryptionKey());
+			assertArrayEquals(encData.aad(), decData.aad());
+		}
+	}
 
 }

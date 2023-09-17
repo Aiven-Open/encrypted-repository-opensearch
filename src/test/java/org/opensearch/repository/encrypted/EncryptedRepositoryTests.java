@@ -24,55 +24,45 @@ import static org.mockito.Mockito.when;
 
 public class EncryptedRepositoryTests extends OpenSearchTestCase {
 
-    final RepositoryMetadata mockRepositoryMetadata =
-            new RepositoryMetadata("some-repo-metadata", "some-repo-type", Settings.builder().build());
+	final RepositoryMetadata mockRepositoryMetadata = new RepositoryMetadata("some-repo-metadata", "some-repo-type",
+			Settings.builder().build());
 
-    final BlobStoreRepository mockedBlobStoreRepository = mock(BlobStoreRepository.class);
+	final BlobStoreRepository mockedBlobStoreRepository = mock(BlobStoreRepository.class);
 
-    final NamedXContentRegistry mockedNamedXContentRegistry = mock(NamedXContentRegistry.class);
+	final NamedXContentRegistry mockedNamedXContentRegistry = mock(NamedXContentRegistry.class);
 
-    final ClusterService mockedClusterService = mock(ClusterService.class);
+	final ClusterService mockedClusterService = mock(ClusterService.class);
 
-    final RecoverySettings mockedRecoverySettings = mock(RecoverySettings.class);
+	final RecoverySettings mockedRecoverySettings = mock(RecoverySettings.class);
 
-    final Cache<String, EncryptionData> mockedCache =
-            (Cache<String, EncryptionData>) mock(Cache.class);
+	final Cache<String, EncryptionData> mockedCache = (Cache<String, EncryptionData>) mock(Cache.class);
 
-    @Before
+	@Before
     public void setupMocks() throws Exception {
         when(mockedClusterService.getClusterApplierService()).thenReturn(mock(ClusterApplierService.class));
     }
 
-    public void testBlobStorageLifecycle() throws Exception {
-        final EncryptedRepository repository =
-                new EncryptedRepository(
-                        mockRepositoryMetadata,
-                        EncryptedRepositorySettings.load(Settings.EMPTY),
-                        "fs",
-                        mockedBlobStoreRepository,
-                        mockedNamedXContentRegistry,
-                        mockedClusterService,
-                        mockedCache,
-                        mockedRecoverySettings);
+	public void testBlobStorageLifecycle() throws Exception {
+		final EncryptedRepository repository = new EncryptedRepository(mockRepositoryMetadata,
+				EncryptedRepositorySettings.load(Settings.EMPTY), "fs", mockedBlobStoreRepository,
+				mockedNamedXContentRegistry, mockedClusterService, mockedCache, mockedRecoverySettings);
 
-        repository.start();
-        verify(mockedBlobStoreRepository).start();
+		repository.start();
+		verify(mockedBlobStoreRepository).start();
 
-        repository.stop();
-        verify(mockedBlobStoreRepository).stop();
-        verify(mockedCache).invalidateAll();
+		repository.stop();
+		verify(mockedBlobStoreRepository).stop();
+		verify(mockedCache).invalidateAll();
 
-        reset(mockedCache);
+		reset(mockedCache);
 
-        repository.close();
-        verify(mockedBlobStoreRepository).close();
-        verify(mockedCache).invalidateAll();
+		repository.close();
+		verify(mockedBlobStoreRepository).close();
+		verify(mockedCache).invalidateAll();
 
-        repository.stats();
-        verify(mockedBlobStoreRepository).stats();
+		repository.stats();
+		verify(mockedBlobStoreRepository).stats();
 
-    }
-
-
+	}
 
 }
