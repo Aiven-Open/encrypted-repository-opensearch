@@ -19,81 +19,68 @@ import java.util.Map;
 
 final class EncryptedBlobContainer extends AbstractBlobContainer {
 
-    private final BlobContainer storageBlobContainer;
+	private final BlobContainer storageBlobContainer;
 
-    private final CryptoIO cryptoIo;
+	private final CryptoIO cryptoIo;
 
-    EncryptedBlobContainer(final BlobPath path,
-                           final CryptoIO cryptoIo,
-                           final BlobContainer storageBlobContainer) {
-        super(path);
-        this.storageBlobContainer = storageBlobContainer;
-        this.cryptoIo = cryptoIo;
-    }
+	EncryptedBlobContainer(final BlobPath path, final CryptoIO cryptoIo, final BlobContainer storageBlobContainer) {
+		super(path);
+		this.storageBlobContainer = storageBlobContainer;
+		this.cryptoIo = cryptoIo;
+	}
 
-    @Override
-    public boolean blobExists(final String s) throws IOException {
-        return storageBlobContainer.blobExists(s);
-    }
+	@Override
+	public boolean blobExists(final String s) throws IOException {
+		return storageBlobContainer.blobExists(s);
+	}
 
-    @Override
-    public InputStream readBlob(final String s) throws IOException {
-        return cryptoIo.decrypt(storageBlobContainer.readBlob(s));
-    }
+	@Override
+	public InputStream readBlob(final String s) throws IOException {
+		return cryptoIo.decrypt(storageBlobContainer.readBlob(s));
+	}
 
-    @Override
-    public InputStream readBlob(final String path, final long position, final long length) throws IOException {
-        throw new UnsupportedOperationException("readBlob hasn't been implemented");
-    }
+	@Override
+	public InputStream readBlob(final String path, final long position, final long length) throws IOException {
+		throw new UnsupportedOperationException("readBlob hasn't been implemented");
+	}
 
-    @Override
-    public void writeBlob(final String blobName,
-                          final InputStream inputStream,
-                          final long blobSize,
-                          final boolean failIfAlreadyExists) throws IOException {
-        storageBlobContainer.writeBlob(
-                blobName,
-                cryptoIo.encrypt(inputStream),
-                cryptoIo.encryptedStreamSize(blobSize),
-                failIfAlreadyExists
-        );
-    }
+	@Override
+	public void writeBlob(final String blobName, final InputStream inputStream, final long blobSize,
+			final boolean failIfAlreadyExists) throws IOException {
+		storageBlobContainer.writeBlob(blobName, cryptoIo.encrypt(inputStream), cryptoIo.encryptedStreamSize(blobSize),
+				failIfAlreadyExists);
+	}
 
-    @Override
-    public void writeBlobAtomic(final String blobName,
-                                final InputStream inputStream,
-                                final long blobSize,
-                                final boolean failIfAlreadyExists) throws IOException {
-        storageBlobContainer.writeBlobAtomic(
-                blobName,
-                cryptoIo.encrypt(inputStream),
-                cryptoIo.encryptedStreamSize(blobSize), failIfAlreadyExists
-        );
-    }
+	@Override
+	public void writeBlobAtomic(final String blobName, final InputStream inputStream, final long blobSize,
+			final boolean failIfAlreadyExists) throws IOException {
+		storageBlobContainer.writeBlobAtomic(blobName, cryptoIo.encrypt(inputStream),
+				cryptoIo.encryptedStreamSize(blobSize), failIfAlreadyExists);
+	}
 
-    @Override
-    public DeleteResult delete() throws IOException {
-        return storageBlobContainer.delete();
-    }
+	@Override
+	public DeleteResult delete() throws IOException {
+		return storageBlobContainer.delete();
+	}
 
-    @Override
-    public void deleteBlobsIgnoringIfNotExists(final List<String> list) throws IOException {
-        storageBlobContainer.deleteBlobsIgnoringIfNotExists(list);
-    }
+	@Override
+	public void deleteBlobsIgnoringIfNotExists(final List<String> list) throws IOException {
+		storageBlobContainer.deleteBlobsIgnoringIfNotExists(list);
+	}
 
-    @Override
-    public Map<String, BlobContainer> children() throws IOException {
-        return storageBlobContainer.children();
-    }
+	@Override
+	public Map<String, BlobContainer> children() throws IOException {
+		return storageBlobContainer.children();
+	}
 
-    @Override
-    public Map<String, BlobMetadata> listBlobs() throws IOException {
-        return storageBlobContainer.listBlobs();
-    }
+	@Override
+	public Map<String, BlobMetadata> listBlobs() throws IOException {
+		return storageBlobContainer.listBlobs();
+	}
 
-    @Override
-    public Map<String, BlobMetadata> listBlobsByPrefix(final String prefix) throws IOException {
-        return storageBlobContainer.listBlobsByPrefix(prefix);
-    }
+	@Override
+	public Map<String, BlobMetadata> listBlobsByPrefix(final String prefix) throws IOException {
+		return storageBlobContainer.listBlobsByPrefix(prefix);
+	}
 
 }

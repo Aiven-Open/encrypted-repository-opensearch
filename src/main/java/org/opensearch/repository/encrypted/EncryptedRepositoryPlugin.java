@@ -35,87 +35,81 @@ import static org.opensearch.repository.encrypted.EncryptedRepositorySettings.SU
 
 public class EncryptedRepositoryPlugin extends Plugin implements RepositoryPlugin {
 
-    private static final Logger LOGGER = LogManager.getLogger(EncryptedRepositoryPlugin.class);
+	private static final Logger LOGGER = LogManager.getLogger(EncryptedRepositoryPlugin.class);
 
-    public static final Setting<String> STORAGE_TYPE_SETTING =
-            Setting.simpleString("storage_type", Setting.Property.NodeScope);
+	public static final Setting<String> STORAGE_TYPE_SETTING = Setting.simpleString("storage_type",
+			Setting.Property.NodeScope);
 
-    private final EncryptedRepositorySettings encryptedRepositorySettings;
+	private final EncryptedRepositorySettings encryptedRepositorySettings;
 
-    private final Provider securityProvider;
+	private final Provider securityProvider;
 
-    public EncryptedRepositoryPlugin(final Settings settings) {
-        this.encryptedRepositorySettings = loadSettings(settings);
-        try {
-            this.securityProvider = Permissions.doPrivileged(BouncyCastleProvider::new);
-        } catch (IOException e) {
-            throw new RuntimeException("Couldn't register BouncyCastle security provider", e);
-        }
-    }
+	public EncryptedRepositoryPlugin(final Settings settings) {
+		this.encryptedRepositorySettings = loadSettings(settings);
+		try {
+			this.securityProvider = Permissions.doPrivileged(BouncyCastleProvider::new);
+		} catch (IOException e) {
+			throw new RuntimeException("Couldn't register BouncyCastle security provider", e);
+		}
+	}
 
-    private static EncryptedRepositorySettings loadSettings(final Settings settings) {
-        try {
-            return Permissions.doPrivileged(() -> EncryptedRepositorySettings.load(settings));
-        } catch (final IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
+	private static EncryptedRepositorySettings loadSettings(final Settings settings) {
+		try {
+			return Permissions.doPrivileged(() -> EncryptedRepositorySettings.load(settings));
+		} catch (final IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
 
+	@Override
+	public List<Setting<?>> getSettings() {
+		return REPOSITORY_SETTINGS;
+	}
 
-    @Override
-    public List<Setting<?>> getSettings() {
-        return REPOSITORY_SETTINGS;
-    }
+	@Override
+	public Map<String, Repository.Factory> getRepositories(final Environment env,
+			final NamedXContentRegistry namedXContentRegistry, final ClusterService clusterService,
+			final RecoverySettings recoverySettings) {
 
-    @Override
-    public Map<String, Repository.Factory> getRepositories(
-            final Environment env,
-            final NamedXContentRegistry namedXContentRegistry,
-            final ClusterService clusterService,
-            final RecoverySettings recoverySettings) {
+		return Collections.singletonMap(EncryptedRepository.REPOSITORY_TYPE, new Repository.Factory() {
+			@Override
+			public Repository create(RepositoryMetadata metadata) throws Exception {
+				throw new UnsupportedOperationException("Couldn't create a single encrypted repository");
+			}
 
-        return Collections.singletonMap(EncryptedRepository.REPOSITORY_TYPE, new Repository.Factory() {
-            @Override
-            public Repository create(RepositoryMetadata metadata) throws Exception {
-                throw new UnsupportedOperationException("Couldn't create a single encrypted repository");
-            }
+			@Override
+			public Repository create(RepositoryMetadata metadata, Function<String, Repository.Factory> typeLookup)
+					throws Exception {
+				final BlobStoreRepository storageRepository = createStorageRepository(metadata, typeLookup);
+				return new EncryptedRepository(metadata, encryptedRepositorySettings,
+						STORAGE_TYPE_SETTING.get(metadata.settings()), storageRepository, namedXContentRegistry,
+						clusterService, recoverySettings, securityProvider);
+			}
 
-            @Override
-            public Repository create(RepositoryMetadata metadata, Function<String, Repository.Factory> typeLookup) throws Exception {
-                final BlobStoreRepository storageRepository = createStorageRepository(metadata, typeLookup);
-                return new EncryptedRepository(metadata,
-                        encryptedRepositorySettings, STORAGE_TYPE_SETTING.get(metadata.settings()), storageRepository,
-                        namedXContentRegistry, clusterService, recoverySettings, securityProvider);
-            }
+			private BlobStoreRepository createStorageRepository(final RepositoryMetadata metadata,
+					final Function<String, Repository.Factory> typeLookup) throws Exception {
+				if (encryptedRepositorySettings.hasNotSettings()) {
+					throw new SettingsException("Encrypted repository security settings haven't been set");
+				}
+				if (!STORAGE_TYPE_SETTING.exists(metadata.settings())) {
+					throw new SettingsException("Setting " + STORAGE_TYPE_SETTING.getKey()
+							+ " hasn't been set. Supported are: " + SUPPORTED_STORAGE_TYPES);
+				}
+				final String storageType = STORAGE_TYPE_SETTING.get(metadata.settings());
+				if (!SUPPORTED_STORAGE_TYPES.contains(storageType)) {
+					throw new SettingsException("Unsupported storage type " + storageType + " for "
+							+ STORAGE_TYPE_SETTING.getKey() + ". Supported are: " + SUPPORTED_STORAGE_TYPES);
+				}
+				final Repository.Factory storageFactory = typeLookup.apply(storageType);
+				if (Objects.isNull(storageFactory)) {
+					throw new IllegalArgumentException("Couldn't create repository type of " + storageType);
+				}
+				return (BlobStoreRepository) storageFactory
+						.create(new RepositoryMetadata(metadata.name(), storageType, metadata.settings()));
+			}
 
-            private BlobStoreRepository createStorageRepository(final RepositoryMetadata metadata,
-                                                                final Function<String, Repository.Factory> typeLookup)
-                    throws Exception {
-                if (encryptedRepositorySettings.hasNotSettings()) {
-                    throw new SettingsException("Encrypted repository security settings haven't been set");
-                }
-                if (!STORAGE_TYPE_SETTING.exists(metadata.settings())) {
-                    throw new SettingsException("Setting "
-                            + STORAGE_TYPE_SETTING.getKey()
-                            + " hasn't been set. Supported are: " + SUPPORTED_STORAGE_TYPES);
-                }
-                final String storageType = STORAGE_TYPE_SETTING.get(metadata.settings());
-                if (!SUPPORTED_STORAGE_TYPES.contains(storageType)) {
-                    throw new SettingsException("Unsupported storage type "
-                            + storageType + " for "
-                            + STORAGE_TYPE_SETTING.getKey()
-                            + ". Supported are: " + SUPPORTED_STORAGE_TYPES);
-                }
-                final Repository.Factory storageFactory = typeLookup.apply(storageType);
-                if (Objects.isNull(storageFactory)) {
-                    throw new IllegalArgumentException("Couldn't create repository type of " + storageType);
-                }
-                return (BlobStoreRepository)
-                        storageFactory.create(new RepositoryMetadata(metadata.name(), storageType, metadata.settings()));
-            }
+		});
 
-        });
-
-    }
+	}
 
 }

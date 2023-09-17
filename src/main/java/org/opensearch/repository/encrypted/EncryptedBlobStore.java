@@ -15,36 +15,35 @@ import java.util.Map;
 
 final class EncryptedBlobStore implements BlobStore {
 
-    private final BlobPath storageBasePath;
+	private final BlobPath storageBasePath;
 
-    private final BlobStore storageBlobStore;
+	private final BlobStore storageBlobStore;
 
-    private final CryptoIO cryptoIo;
+	private final CryptoIO cryptoIo;
 
-    EncryptedBlobStore(final BlobStore storageBlobStore,
-                       final CryptoIO cryptoIo) {
-        this.storageBasePath = BlobPath.cleanPath();
-        this.storageBlobStore = storageBlobStore;
-        this.cryptoIo = cryptoIo;
-    }
+	EncryptedBlobStore(final BlobStore storageBlobStore, final CryptoIO cryptoIo) {
+		this.storageBasePath = BlobPath.cleanPath();
+		this.storageBlobStore = storageBlobStore;
+		this.cryptoIo = cryptoIo;
+	}
 
-    @Override
-    public BlobContainer blobContainer(final BlobPath blobPath) {
-        BlobPath storageBlobContainerPath = storageBasePath;
-        for (final String s : blobPath) {
-            storageBlobContainerPath = storageBlobContainerPath.add(s);
-        }
-        final BlobContainer storageBlobContainer = storageBlobStore.blobContainer(storageBlobContainerPath);
-        return new EncryptedBlobContainer(blobPath, cryptoIo, storageBlobContainer);
-    }
+	@Override
+	public BlobContainer blobContainer(final BlobPath blobPath) {
+		BlobPath storageBlobContainerPath = storageBasePath;
+		for (final String s : blobPath) {
+			storageBlobContainerPath = storageBlobContainerPath.add(s);
+		}
+		final BlobContainer storageBlobContainer = storageBlobStore.blobContainer(storageBlobContainerPath);
+		return new EncryptedBlobContainer(blobPath, cryptoIo, storageBlobContainer);
+	}
 
-    @Override
-    public void close() throws IOException {
-    }
+	@Override
+	public void close() throws IOException {
+	}
 
-    @Override
-    public Map<String, Long> stats() {
-        return storageBlobStore.stats();
-    }
+	@Override
+	public Map<String, Long> stats() {
+		return storageBlobStore.stats();
+	}
 
 }
