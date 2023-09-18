@@ -25,58 +25,57 @@ import java.util.Objects;
 
 public class RsaKeysReader {
 
-    public static KeyPair readRsaKeyPair(final byte[] publicKeyBytes,
-                                         final byte[] privateKeyBytes) {
-        Objects.requireNonNull(publicKeyBytes, "Pubic key hasn't been set");
-        Objects.requireNonNull(privateKeyBytes, "Private key hasn't been set");
-        try {
-            if (publicKeyBytes.length == 0) {
-                throw new SettingsException("Pubic key hasn't been set");
-            }
-            if (privateKeyBytes.length == 0) {
-                throw new SettingsException("Private key hasn't been set");
-            }
-            final PublicKey publicKey = readPublicKey(publicKeyBytes);
-            final PrivateKey privateKey = readPrivateKey(privateKeyBytes);
-            return new KeyPair(publicKey, privateKey);
-        } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new SettingsException("Couldn't generate RSA key pair", e);
-        }
-    }
+	public static KeyPair readRsaKeyPair(final byte[] publicKeyBytes, final byte[] privateKeyBytes) {
+		Objects.requireNonNull(publicKeyBytes, "Pubic key hasn't been set");
+		Objects.requireNonNull(privateKeyBytes, "Private key hasn't been set");
+		try {
+			if (publicKeyBytes.length == 0) {
+				throw new SettingsException("Pubic key hasn't been set");
+			}
+			if (privateKeyBytes.length == 0) {
+				throw new SettingsException("Private key hasn't been set");
+			}
+			final PublicKey publicKey = readPublicKey(publicKeyBytes);
+			final PrivateKey privateKey = readPrivateKey(privateKeyBytes);
+			return new KeyPair(publicKey, privateKey);
+		} catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+			throw new SettingsException("Couldn't generate RSA key pair", e);
+		}
+	}
 
-    private static PublicKey readPublicKey(final byte[] bytes)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
-        try {
-            final byte[] pemContent = readPemContent(bytes);
-            final X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pemContent);
-            final KeyFactory kf = KeyFactory.getInstance("RSA");
-            return kf.generatePublic(keySpec);
-        } catch (final IOException e) {
-            throw new SettingsException("Couldn't read public key", e);
-        }
-    }
+	private static PublicKey readPublicKey(final byte[] bytes)
+			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		try {
+			final byte[] pemContent = readPemContent(bytes);
+			final X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pemContent);
+			final KeyFactory kf = KeyFactory.getInstance("RSA");
+			return kf.generatePublic(keySpec);
+		} catch (final IOException e) {
+			throw new SettingsException("Couldn't read public key", e);
+		}
+	}
 
-    private static PrivateKey readPrivateKey(final byte[] bytes)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
-        try {
-            final byte[] pemContent = readPemContent(bytes);
-            final PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pemContent);
-            final KeyFactory kf = KeyFactory.getInstance("RSA");
-            return kf.generatePrivate(keySpec);
-        } catch (final IOException e) {
-            throw new SettingsException("Couldn't read private key", e);
-        }
-    }
+	private static PrivateKey readPrivateKey(final byte[] bytes)
+			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		try {
+			final byte[] pemContent = readPemContent(bytes);
+			final PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pemContent);
+			final KeyFactory kf = KeyFactory.getInstance("RSA");
+			return kf.generatePrivate(keySpec);
+		} catch (final IOException e) {
+			throw new SettingsException("Couldn't read private key", e);
+		}
+	}
 
-    private static byte[] readPemContent(final byte[] bytes) throws IOException {
-        final InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8);
-        try (PemReader pemReader = new PemReader(reader)) {
-            final PemObject pemObject = pemReader.readPemObject();
-            if (Objects.isNull(pemObject)) {
-                throw new SettingsException("Couldn't read PEM");
-            }
-            return pemObject.getContent();
-        }
-    }
+	private static byte[] readPemContent(final byte[] bytes) throws IOException {
+		final InputStreamReader reader = new InputStreamReader(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8);
+		try (PemReader pemReader = new PemReader(reader)) {
+			final PemObject pemObject = pemReader.readPemObject();
+			if (Objects.isNull(pemObject)) {
+				throw new SettingsException("Couldn't read PEM");
+			}
+			return pemObject.getContent();
+		}
+	}
 
 }

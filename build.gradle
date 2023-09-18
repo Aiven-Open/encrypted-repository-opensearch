@@ -4,10 +4,23 @@ apply plugin: "java"
 apply plugin: "idea"
 apply plugin: "opensearch.opensearchplugin"
 apply plugin: "opensearch.yaml-rest-test"
-apply plugin: 'opensearch.pluginzip'
+apply plugin: "opensearch.pluginzip"
+apply plugin: "checkstyle"
+apply plugin: "com.diffplug.spotless"
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
+
+checkstyle {
+    toolVersion "10.3.3"
+    configDirectory.set(rootProject.file("checkstyle/"))
+}
+
+spotless {
+    java {
+        eclipse()
+    }
+}
 
 tasks.register("preparePluginPathDirs") {
     mustRunAfter clean
@@ -48,6 +61,7 @@ buildscript {
 
     dependencies {
         classpath "org.opensearch.gradle:build-tools:${opensearch_version}"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.21.0"
     }
 }
 
