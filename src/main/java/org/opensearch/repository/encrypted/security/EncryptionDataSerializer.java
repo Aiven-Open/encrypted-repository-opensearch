@@ -38,7 +38,8 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 
 	public static final int ENCRYPTED_AAD_SIZE = 256;
 
-	public static final int ENC_DATA_SIZE = ENCRYPTED_KEY_SIZE + ENCRYPTED_AAD_SIZE + SIGNATURE_SIZE + Integer.BYTES;
+	public static final int ENC_DATA_SIZE = EncryptionDataGenerator.GCM_IV_LENGTH + ENCRYPTED_KEY_SIZE
+			+ ENCRYPTED_AAD_SIZE + SIGNATURE_SIZE + Integer.BYTES;
 
 	private final Provider securityProvider;
 
@@ -55,11 +56,13 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 			}
 			final byte[] key = encryptionData.encryptionKey().getEncoded();
 			final byte[] aad = encryptionData.aad();
-			final byte[] signature = sign(ByteBuffer.allocate(key.length + aad.length).put(key).put(aad).array());
+			final byte[] iv = encryptionData.iv();
+			final byte[] signature = sign(
+					ByteBuffer.allocate(key.length + aad.length + iv.length).put(key).put(aad).put(iv).array());
 			final byte[] encryptedKey = encrypt(key, "Couldn't encrypt " + KEY_ALGORITHM + " key");
 			final byte[] encryptedAad = encrypt(aad, "Couldn't encrypt AAD");
-			return ByteBuffer.allocate(ENC_DATA_SIZE).put(encryptedKey).put(encryptedAad).put(signature).putInt(VERSION)
-					.array();
+			return ByteBuffer.allocate(ENC_DATA_SIZE).put(iv).put(encryptedKey).put(encryptedAad).put(signature)
+					.putInt(VERSION).array();
 		});
 	}
 
@@ -69,15 +72,17 @@ public class EncryptionDataSerializer implements Encryptor, Decryptor {
 			final byte[] encryptedKey = new byte[256];
 			final byte[] encryptedAad = new byte[256];
 			final byte[] signature = new byte[256];
+			final byte[] iv = new byte[EncryptionDataGenerator.GCM_IV_LENGTH];
+			buffer.get(iv);
 			buffer.get(encryptedKey);
 			buffer.get(encryptedAad);
 			buffer.get(signature);
 			buffer.getInt(); // skip version
 			final byte[] decryptedKey = decrypt(encryptedKey, "Couldn't decrypt " + KEY_ALGORITHM + " key");
 			final byte[] decryptedAdd = decrypt(encryptedAad, "Couldn't decrypt AAD");
-			verifySignature(signature, ByteBuffer.allocate(decryptedKey.length + decryptedAdd.length).put(decryptedKey)
-					.put(decryptedAdd).array());
-			return new EncryptionData(new SecretKeySpec(decryptedKey, KEY_ALGORITHM), decryptedAdd);
+			verifySignature(signature, ByteBuffer.allocate(decryptedKey.length + decryptedAdd.length + iv.length)
+					.put(decryptedKey).put(decryptedAdd).put(iv).array());
+			return new EncryptionData(new SecretKeySpec(decryptedKey, KEY_ALGORITHM), decryptedAdd, iv);
 		});
 	}
 
