@@ -1,20 +1,21 @@
 import org.opensearch.gradle.test.RestIntegTestTask
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'opensearch.opensearchplugin'
+apply plugin: 'opensearch.yaml-rest-test'
+apply plugin: 'opensearch.pluginzip'
+apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
 
-apply plugin: "java"
-apply plugin: "idea"
-apply plugin: "opensearch.opensearchplugin"
-apply plugin: "opensearch.yaml-rest-test"
-apply plugin: "opensearch.pluginzip"
-apply plugin: "checkstyle"
-apply plugin: "com.diffplug.spotless"
+def pluginName = 'rename'
+def pluginDescription = 'Custom plugin'
+def projectPath = 'org.opensearch'
+def pathToPlugin = 'path.to.plugin'
+def pluginClassName = 'RenamePlugin'
+group = "RenameGroup"
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
-
-checkstyle {
-    toolVersion "10.3.3"
-    configDirectory.set(rootProject.file("checkstyle/"))
-}
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 spotless {
     java {
@@ -29,6 +30,29 @@ tasks.register("preparePluginPathDirs") {
         mkdir "src/main/java/org/opensearch/$newPath"
         mkdir "src/test/java/org/opensearch/$newPath"
         mkdir "src/yamlRestTest/java/org/opensearch/$newPath"
+    }
+}
+
+publishing {
+    publications {
+        pluginZip(MavenPublication) { publication ->
+            pom {
+                name = pluginName
+                description = pluginDescription
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        name = "OpenSearch"
+                        url = "https://github.com/opensearch-project/opensearch-plugin-template-java"
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -61,7 +85,7 @@ buildscript {
 
     dependencies {
         classpath "org.opensearch.gradle:build-tools:${opensearch_version}"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.21.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
     }
 }
 
@@ -103,13 +127,12 @@ integTest {
 
     // The --debug-jvm command-line option makes the cluster debuggable; this makes the tests debuggable
     if (System.getProperty("test.debug") != null) {
-        jvmArgs "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+        jvmArgs += ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"]
     }
+    jvmArgs += ["-Djava.security.manager=allow"]
 }
 
 testClusters.integTest {
-    testDistribution = "INTEG_TEST"
-
     // This installs our plugin into the testClusters
     plugin(project.tasks.bundlePlugin.archiveFile)
 }
