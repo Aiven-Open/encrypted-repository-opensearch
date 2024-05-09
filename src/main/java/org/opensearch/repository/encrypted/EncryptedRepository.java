@@ -12,13 +12,13 @@ import org.opensearch.cluster.service.ClusterService;
 import org.opensearch.common.blobstore.BlobContainer;
 import org.opensearch.common.blobstore.BlobPath;
 import org.opensearch.common.blobstore.BlobStore;
-import org.opensearch.common.bytes.BytesArray;
+import org.opensearch.core.common.bytes.BytesArray;
 import org.opensearch.common.cache.Cache;
 import org.opensearch.common.cache.CacheBuilder;
 import org.opensearch.common.settings.Setting;
 import org.opensearch.common.settings.Settings;
-import org.opensearch.common.unit.ByteSizeUnit;
-import org.opensearch.common.unit.ByteSizeValue;
+import org.opensearch.core.common.unit.ByteSizeUnit;
+import org.opensearch.core.common.unit.ByteSizeValue;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.indices.recovery.RecoverySettings;
 import org.opensearch.repositories.RepositoryException;
@@ -77,8 +77,7 @@ public class EncryptedRepository extends BlobStoreRepository {
 			final BlobStoreRepository blobStorageRepository, final NamedXContentRegistry namedXContentRegistry,
 			final ClusterService clusterService, final Cache<String, EncryptionData> encryptionDataCache,
 			final RecoverySettings recoverySettings, final Provider securityProvider) {
-		super(metadata, COMPRESS_SETTING.get(metadata.settings()), namedXContentRegistry, clusterService,
-				recoverySettings);
+		super(metadata, namedXContentRegistry, clusterService, recoverySettings);
 		this.encryptedRepositorySettings = encryptedRepositorySettings;
 		this.blobStorageRepositoryType = blobStorageRepositoryType;
 		this.blobStorageRepository = blobStorageRepository;
