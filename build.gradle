@@ -73,7 +73,7 @@ testingConventions.enabled = true
 
 buildscript {
     ext {
-        opensearch_version = "2.13.0"
+        opensearch_version = "2.14.0"
     }
 
     repositories {
@@ -107,7 +107,7 @@ test {
 }
 
 dependencies {
-    implementation "org.bouncycastle:bcprov-jdk15to18:${versions.bouncycastle}"
+    implementation "org.bouncycastle:bcprov-jdk18on:${versions.bouncycastle}"
 }
 
 forbiddenPatterns {
