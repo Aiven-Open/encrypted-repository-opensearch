@@ -37,7 +37,6 @@ import static org.opensearch.indices.RemoteStoreSettings.CLUSTER_REMOTE_STORE_PA
 import static org.opensearch.indices.RemoteStoreSettings.CLUSTER_REMOTE_STORE_TRANSLOG_METADATA;
 import static org.opensearch.indices.RemoteStoreSettings.CLUSTER_REMOTE_TRANSLOG_BUFFER_INTERVAL_SETTING;
 import static org.opensearch.indices.RemoteStoreSettings.CLUSTER_REMOTE_TRANSLOG_TRANSFER_TIMEOUT_SETTING;
-import static org.opensearch.repositories.blobstore.BlobStoreRepository.SNAPSHOT_ASYNC_DELETION_ENABLE_SETTING;
 
 public class EncryptedRepositoryTests extends OpenSearchTestCase {
 
@@ -60,8 +59,7 @@ public class EncryptedRepositoryTests extends OpenSearchTestCase {
 			CLUSTER_REMOTE_INDEX_SEGMENT_METADATA_RETENTION_MAX_COUNT_SETTING,
 			CLUSTER_REMOTE_TRANSLOG_TRANSFER_TIMEOUT_SETTING, CLUSTER_REMOTE_STORE_PATH_TYPE_SETTING,
 			CLUSTER_REMOTE_STORE_TRANSLOG_METADATA, CLUSTER_REMOTE_STORE_PATH_HASH_ALGORITHM_SETTING,
-			CLUSTER_REMOTE_MAX_TRANSLOG_READERS, CLUSTER_REMOTE_SEGMENT_TRANSFER_TIMEOUT_SETTING,
-			SNAPSHOT_ASYNC_DELETION_ENABLE_SETTING);
+			CLUSTER_REMOTE_MAX_TRANSLOG_READERS, CLUSTER_REMOTE_SEGMENT_TRANSFER_TIMEOUT_SETTING);
 
 	@Before
 	public void setupMocks() throws Exception {
@@ -75,8 +73,7 @@ public class EncryptedRepositoryTests extends OpenSearchTestCase {
 				.put(CLUSTER_REMOTE_STORE_PATH_HASH_ALGORITHM_SETTING.getKey(),
 						RemoteStoreEnums.PathHashAlgorithm.FNV_1A_COMPOSITE_1.toString())
 				.put(CLUSTER_REMOTE_MAX_TRANSLOG_READERS.getKey(), -1)
-				.put(CLUSTER_REMOTE_SEGMENT_TRANSFER_TIMEOUT_SETTING.getKey(), TimeValue.timeValueMinutes(30))
-				.put(SNAPSHOT_ASYNC_DELETION_ENABLE_SETTING.getKey(), false).build();
+				.put(CLUSTER_REMOTE_SEGMENT_TRANSFER_TIMEOUT_SETTING.getKey(), TimeValue.timeValueMinutes(30)).build();
 
 		when(mockedClusterService.getClusterApplierService()).thenReturn(mock(ClusterApplierService.class));
 		when(mockedClusterService.getSettings()).thenReturn(settings);
