@@ -14,8 +14,8 @@ def pathToPlugin = 'path.to.plugin'
 def pluginClassName = 'RenamePlugin'
 group = "RenameGroup"
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 spotless {
     java {
