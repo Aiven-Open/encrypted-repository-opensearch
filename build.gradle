@@ -1,10 +1,13 @@
 import org.opensearch.gradle.test.RestIntegTestTask
+
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'opensearch.opensearchplugin'
 apply plugin: 'opensearch.yaml-rest-test'
 apply plugin: 'opensearch.pluginzip'
+apply plugin: 'opensearch.java-agent'
+
 apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
 
 def pluginName = 'rename'
@@ -14,8 +17,10 @@ def pathToPlugin = 'path.to.plugin'
 def pluginClassName = 'RenamePlugin'
 group = "RenameGroup"
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
 
 spotless {
     java {
@@ -73,7 +78,7 @@ testingConventions.enabled = true
 
 buildscript {
     ext {
-        opensearch_version = "3.0.0-alpha1"
+        opensearch_version = "3.3.2"
     }
 
     repositories {
@@ -85,7 +90,7 @@ buildscript {
 
     dependencies {
         classpath "org.opensearch.gradle:build-tools:${opensearch_version}"
-        classpath "com.diffplug.spotless:spotless-plugin-gradle:6.25.0"
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:8.1.0"
     }
 }
 
@@ -107,7 +112,7 @@ test {
 }
 
 dependencies {
-    implementation "org.bouncycastle:bcprov-jdk18on:${versions.bouncycastle}"
+    implementation "org.bouncycastle:bcprov-jdk18on:1.83"
 }
 
 forbiddenPatterns {
