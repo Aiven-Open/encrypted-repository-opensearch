@@ -19,12 +19,13 @@ public final class EncryptionDataGenerator {
 
 	private static final int AAD_SIZE = 32;
 
+	public static final int GCM_IV_LENGTH = 12;
+
 	private final KeyGenerator aesKeyGenerator;
 
-	private final SecureRandom random;
+	private final SecureRandom random = new SecureRandom();
 
 	public EncryptionDataGenerator(final Provider securityProvider) {
-		this.random = new SecureRandom();
 		try {
 			this.aesKeyGenerator = Permissions.doPrivileged(() -> {
 				try {
@@ -43,7 +44,9 @@ public final class EncryptionDataGenerator {
 	public EncryptionData generate() {
 		final byte[] aad = new byte[AAD_SIZE];
 		random.nextBytes(aad);
-		return new EncryptionData(aesKeyGenerator.generateKey(), aad);
+		final byte[] iv = new byte[GCM_IV_LENGTH];
+		random.nextBytes(iv);
+		return new EncryptionData(aesKeyGenerator.generateKey(), aad, iv);
 	}
 
 }
