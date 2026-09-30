@@ -3,7 +3,6 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'opensearch.opensearchplugin'
-apply plugin: 'opensearch.yaml-rest-test'
 apply plugin: 'opensearch.pluginzip'
 apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
 
@@ -73,7 +72,7 @@ testingConventions.enabled = true
 
 buildscript {
     ext {
-        opensearch_version = "2.19.4"
+        opensearch_version = "2.19.6"
     }
 
     repositories {
@@ -91,9 +90,13 @@ buildscript {
 
 repositories {
     mavenLocal()
-    maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
+    maven { url = "https://ci.opensearch.org/maven2/" }
     mavenCentral()
     maven { url "https://plugins.gradle.org/m2/" }
+    maven { url "https://ci.opensearch.org/ci/dbc/snapshots/maven/" }
+    maven { url "https://artifacts.opensearch.org/snapshots/lucene/" }
+    maven { url "https://build.shibboleth.net/nexus/content/groups/public" }
+    maven { url "https://build.shibboleth.net/nexus/content/repositories/releases" }
 }
 
 test {
