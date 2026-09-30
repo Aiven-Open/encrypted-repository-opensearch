@@ -25,8 +25,7 @@ with all official supported repository plugins:
 | OpenSearch |  Plugin | Release date |
 |------------:|--------:|-------------:|
 |    3.3.2 | 3.3.2.0 | Jan 14, 2026 | 
-|    2.19.4 | 2.19.4.0 | Jan 14, 2026 | 
-|    2.19.3 | 2.19.3.0 | Jan 14, 2026 | 
+|    2.19.6 | 2.19.640 | Sep 14, 2026 | 
 
 ## Plugin Configuration
 * OpenSearch keystore settings
