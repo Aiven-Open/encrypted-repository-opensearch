@@ -5,14 +5,10 @@
 
 package org.opensearch.repository.encrypted;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.opensearch.cluster.metadata.RepositoryMetadata;
 import org.opensearch.cluster.service.ClusterService;
-import org.opensearch.common.blobstore.BlobContainer;
 import org.opensearch.common.blobstore.BlobPath;
 import org.opensearch.common.blobstore.BlobStore;
-import org.opensearch.core.common.bytes.BytesArray;
 import org.opensearch.common.cache.Cache;
 import org.opensearch.common.cache.CacheBuilder;
 import org.opensearch.common.settings.Setting;
@@ -21,26 +17,18 @@ import org.opensearch.core.common.unit.ByteSizeUnit;
 import org.opensearch.core.common.unit.ByteSizeValue;
 import org.opensearch.core.xcontent.NamedXContentRegistry;
 import org.opensearch.indices.recovery.RecoverySettings;
-import org.opensearch.repositories.RepositoryException;
 import org.opensearch.repositories.RepositoryStats;
 import org.opensearch.repositories.blobstore.BlobStoreRepository;
 import org.opensearch.repository.encrypted.security.CryptoIO;
 import org.opensearch.repository.encrypted.security.EncryptionData;
-import org.opensearch.repository.encrypted.security.EncryptionDataGenerator;
 import org.opensearch.repository.encrypted.security.EncryptionDataSerializer;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.Provider;
 import java.util.Locale;
 
 public class EncryptedRepository extends BlobStoreRepository {
 
-	private static final Logger LOGGER = LogManager.getLogger(EncryptedRepository.class);
-
 	public static final String REPOSITORY_TYPE = "encrypted";
-
-	public static final String METADATA_FILE_NAME = ".repository_metadata";
 
 	public static final Setting<String> CLIENT_SETTING = Setting.simpleString("client", "default");
 
@@ -57,8 +45,6 @@ public class EncryptedRepository extends BlobStoreRepository {
 	private final EncryptedRepositorySettings encryptedRepositorySettings;
 
 	private final Cache<String, EncryptionData> encryptionDataCache;
-
-	private final EncryptionDataGenerator encryptionDataGenerator;
 
 	private final Provider securityProvider;
 
@@ -82,7 +68,6 @@ public class EncryptedRepository extends BlobStoreRepository {
 		this.blobStorageRepositoryType = blobStorageRepositoryType;
 		this.blobStorageRepository = blobStorageRepository;
 		this.encryptionDataCache = encryptionDataCache;
-		this.encryptionDataGenerator = new EncryptionDataGenerator(securityProvider);
 		this.securityProvider = securityProvider;
 	}
 
@@ -124,38 +109,13 @@ public class EncryptedRepository extends BlobStoreRepository {
 	@Override
 	protected BlobStore createBlobStore() throws Exception {
 		return new EncryptedBlobStore(blobStorageRepository.blobStore(),
-				new CryptoIO(encryptionDataCache.computeIfAbsent(settingsKey(metadata.settings()),
-						this::createOrRestoreEncryptionData), securityProvider));
+				new CryptoIO(new EncryptionDataSerializer(
+						encryptedRepositorySettings.rsaKeyPair(settingsKey(metadata.settings())), securityProvider),
+						securityProvider));
 	}
 
 	private String settingsKey(final Settings settings) {
 		return String.format(Locale.getDefault(), "%s-%s", blobStorageRepositoryType, CLIENT_SETTING.get(settings));
-	}
-
-	private EncryptionData createOrRestoreEncryptionData(final String clientName) throws IOException {
-		final BlobStore blobStore = blobStorageRepository.blobStore();
-		final BlobContainer blobContainer = blobStore.blobContainer(basePath());
-		final EncryptionData encryptionData;
-		final EncryptionDataSerializer encryptionDataSerializer = new EncryptionDataSerializer(
-				encryptedRepositorySettings.rsaKeyPair(clientName), securityProvider);
-		if (blobContainer.blobExists(METADATA_FILE_NAME)) {
-			LOGGER.info("Restore encryption data");
-			try (InputStream in = blobContainer.readBlob(METADATA_FILE_NAME)) {
-				encryptionData = encryptionDataSerializer.deserialize(in.readAllBytes());
-			}
-		} else {
-			LOGGER.info("Create encryption data");
-			if (isReadOnly()) {
-				throw new RepositoryException(REPOSITORY_TYPE,
-						"Couldn't create encryption data. The repository " + metadata.name() + " is in readonly mode");
-			}
-			encryptionData = encryptionDataGenerator.generate();
-			final byte[] bytes = encryptionDataSerializer.serialize(encryptionData);
-			try (InputStream in = new BytesArray(bytes).streamInput()) {
-				blobContainer.writeBlobAtomic(METADATA_FILE_NAME, in, bytes.length, true);
-			}
-		}
-		return encryptionData;
 	}
 
 }
